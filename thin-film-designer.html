@@ -11,7 +11,7 @@
 :root{
   --bg:#EDF0F3; --panel:#FFFFFF; --ink:#1C2530; --muted:#5B6775; --line:#CDD4DC;
   --accent:#3A3F9E; --accent-hover:#2B2F80; --accent-soft:#E3E4F6;
-  --H:#2F5D7C; --L:#BFD8E6; --sub:#9AA6B2; --curve:#3A3F9E; --grid:#E2E7EC; --err:#B3261E;
+  --H:#2F5D7C; --M:#7FA6C0; --meas:#D9822B; --L:#BFD8E6; --sub:#9AA6B2; --curve:#3A3F9E; --grid:#E2E7EC; --err:#B3261E;
   --ok:#2E7D4F; --passZone:rgba(46,125,79,.10); --blockZone:rgba(179,38,30,.08);
   color-scheme: light;
   box-sizing:border-box;
@@ -21,7 +21,7 @@
   :root:not([data-theme="light"]){
     --bg:#12171D; --panel:#1A2129; --ink:#E4E9EE; --muted:#93A0AD; --line:#2C3743;
     --accent:#8E93F0; --accent-hover:#B0B4F7; --accent-soft:#272C52;
-    --H:#6FA6C8; --L:#2A4556; --sub:#4A5562; --curve:#A3A7F5; --grid:#232C36; --err:#F2827B;
+    --H:#6FA6C8; --M:#4A7C9C; --meas:#F0A860; --L:#2A4556; --sub:#4A5562; --curve:#A3A7F5; --grid:#232C36; --err:#F2827B;
     --ok:#6CC594; --passZone:rgba(108,197,148,.13); --blockZone:rgba(242,130,123,.12);
     color-scheme: dark;
   }
@@ -29,7 +29,7 @@
 :root[data-theme="dark"]{
   --bg:#12171D; --panel:#1A2129; --ink:#E4E9EE; --muted:#93A0AD; --line:#2C3743;
   --accent:#8E93F0; --accent-hover:#B0B4F7; --accent-soft:#272C52;
-  --H:#6FA6C8; --L:#2A4556; --sub:#4A5562; --curve:#A3A7F5; --grid:#232C36; --err:#F2827B;
+  --H:#6FA6C8; --M:#4A7C9C; --meas:#F0A860; --L:#2A4556; --sub:#4A5562; --curve:#A3A7F5; --grid:#232C36; --err:#F2827B;
     --ok:#6CC594; --passZone:rgba(108,197,148,.13); --blockZone:rgba(242,130,123,.12);
   color-scheme: dark;
 }
@@ -38,19 +38,30 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   font-size:15px;line-height:1.5}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
+.wrap{max-width:1480px;margin:0 auto;padding:24px 24px 48px}
 header h1{font-size:1.6rem;margin:0;letter-spacing:-0.01em;font-weight:700}
-header p{margin:4px 0 0;color:var(--muted);max-width:70ch}
-.grid{display:grid;gap:16px;margin-top:18px}
-@media(min-width:900px){.grid{grid-template-columns:340px 1fr;align-items:start}}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
-.controls{display:flex;flex-direction:column;gap:14px}
-@media(max-width:899px){.controls{order:2}}
-fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-legend{font-weight:600;padding:0;margin-bottom:6px}
+header p{margin:4px 0 0;color:var(--muted);max-width:80ch}
+/* The page is one wide board: describe box on top, then the results, then a row of setting cards. */
+.grid{display:grid;gap:18px;margin-top:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));align-items:start}
+.grid .card, .grid .results{min-width:0}
+.card.describe{order:-2;grid-column:1/-1}
+.results{order:-1;grid-column:1/-1}
+.res-top{display:flex;flex-direction:column;gap:2px}
+@media(min-width:1000px){
+  .res-body{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+  .describe .dgrid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start}
+}
+.res-side{display:flex;flex-direction:column;gap:4px;min-width:0}
+.res-side details{margin-top:12px}
+.describe .dgrid > div{display:flex;flex-direction:column;gap:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}
+.controls{grid-column:1/-1;column-width:360px;column-gap:18px}
+.controls .card{break-inside:avoid;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.card > h2{font-size:1rem;font-weight:600;margin:0 0 2px}
 .row{display:grid;grid-template-columns:auto 1fr 76px;gap:8px;align-items:center}
 .row .tag{width:22px;height:22px;border-radius:5px;display:grid;place-items:center;font-weight:700;font-size:.8rem}
-.tag.h{background:var(--H);color:#fff} .tag.l{background:var(--L);color:var(--ink)} .tag.s{background:var(--sub);color:#fff}
+.tag.h{background:var(--H);color:#fff} .tag.m{background:var(--M);color:#fff} .tag.l{background:var(--L);color:var(--ink)} .tag.s{background:var(--sub);color:#fff}
 label.small{font-size:.85rem;color:var(--muted)}
 select,input[type=number],input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--bg);
   border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
@@ -65,18 +76,18 @@ button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);
 button[aria-pressed="true"]:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
 .err{color:var(--err);font-size:.85rem;min-height:1.2em}
 .check{display:flex;gap:8px;align-items:center}
-.result{font-size:1.15rem;font-weight:600;margin:0 0 2px}
+.result{font-size:1.4rem;font-weight:700;margin:0 0 2px;letter-spacing:-0.01em}
 .sub{color:var(--muted);margin:0 0 12px;font-size:.9rem}
 .plotbox{position:relative}
-canvas{display:block;width:100%;height:340px;touch-action:pan-y}
-@media(max-width:600px){canvas{height:260px}}
+canvas{display:block;width:100%;height:440px;touch-action:pan-y}
+@media(max-width:600px){canvas{height:260px} .wrap{padding:16px 14px 40px} .card,.panel{padding:16px}}
 .stack{margin-top:16px}
 .stack h2,.table h2{font-size:1rem;margin:0 0 6px}
 .bar{display:flex;height:42px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
 .bar div{min-width:1px}
 .bar .s{flex:0 0 56px;background:var(--sub);color:#fff;font-size:.75rem;display:grid;place-items:center}
 .bar .a{flex:0 0 40px;background:var(--bg);color:var(--muted);font-size:.75rem;display:grid;place-items:center}
-.bar .H{background:var(--H)} .bar .L{background:var(--L)}
+.bar .H{background:var(--H)} .bar .M{background:var(--M)} .bar .L{background:var(--L)}
 .legend{display:flex;gap:14px;font-size:.85rem;color:var(--muted);margin-top:6px;flex-wrap:wrap}
 details{margin-top:14px}
 summary{cursor:pointer;font-weight:600}
@@ -110,6 +121,9 @@ textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .read li{padding:1px 0}
 .read li::before{content:"→ ";color:var(--accent);font-weight:600}
 .read li.warn::before{content:"! ";color:var(--err)}
+.plegend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--muted);margin:6px 0 0}
+.plegend:empty{display:none}
+.plegend i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
 .trow select{font-size:.85rem}
 code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
 </style>
@@ -122,10 +136,24 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
   </header>
 
   <div class="grid">
-    <section class="panel controls" aria-label="Design settings">
-      <fieldset>
-        <legend>Describe the filter</legend>
+    <div class="card describe">
+        <h2>Describe the filter</h2>
+        <div class="dgrid"><div>
+        <label class="small" for="ftype">Filter type</label>
+        <select id="ftype"><option value="">Pick a type to fill in a template…</option>
+          <option value="Anti-reflection coating on BK7, 400 to 700 nm, average reflection less than 1%">AR (broadband)</option>
+          <option value="V-coat on BK7 at 1064 nm, average reflection less than 0.25%">V-coat (single wavelength)</option>
+          <option value="Dual-band anti-reflection on BK7, 520-545 nm plus 1050-1080 nm, average reflection less than 1%">Dual-band AR</option>
+          <option value="Bandpass on fused silica, center 532 nm, FWHM 10 nm, peak transmission > 80%">Bandpass</option>
+          <option value="BK7 longpass, cut-on 650 nm, block 400-620 nm OD 2, transmission above 90% from 670 to 1000 nm">Longpass</option>
+          <option value="BK7 shortpass, cut-off 650 nm, block 700-900 nm OD 2, transmission above 90% from 450 to 630 nm">Shortpass</option>
+          <option value="Notch filter on fused silica, 500-560 nm">Notch</option>
+          <option value="50/50 beamsplitter on fused silica, 450-650 nm">Beamsplitter 50/50</option>
+          <option value="Mirror on BK7, 450-650 nm, average reflection greater than 99%">High reflector</option>
+        </select>
         <textarea id="desc" rows="3" placeholder="Germanium substrate, anti-reflection coating 3 to 5 microns, average reflection less than 3%"></textarea>
+        </div><div>
+        <span class="small" style="color:var(--muted);font-size:.85rem">Or start from an example</span>
         <div class="chips" aria-label="Examples">
           <button data-ex="Germanium substrate anti-reflective coating from 3 microns to 5 microns, average reflection less than 3% between 3 and 5 microns">Ge AR 3–5 µm</button>
           <button data-ex="BK7 longpass, cut-on 650 nm, block 400-620 nm OD 2, transmission above 90% from 670 to 1000 nm">Longpass 650 nm</button>
@@ -134,18 +162,21 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
         </div>
         <button id="buildBtn" class="primary">Set up and optimize</button>
         <ul class="read" id="read" aria-live="polite"></ul>
-      </fieldset>
+        </div></div>
+      </div>
 
-      <fieldset>
-        <legend>Materials</legend>
+    <div class="controls" aria-label="Design settings">
+      <div class="card">
+        <h2>Materials</h2>
         <div class="row"><span class="tag s">S</span><select id="subSel"></select><input id="subN" type="number" step="0.001" aria-label="Substrate index"></div>
         <div class="row"><span class="tag h">H</span><select id="hSel"></select><input id="hN" type="number" step="0.01" aria-label="High index"></div>
+        <div class="row"><span class="tag m">M</span><select id="mSel"></select><input id="mN" type="number" step="0.01" aria-label="Middle index"></div>
         <div class="row"><span class="tag l">L</span><select id="lSel"></select><input id="lN" type="number" step="0.01" aria-label="Low index"></div>
-        <p class="help">The number box is the refractive index. Change it to match your own sputtered films.</p>
-      </fieldset>
+        <p class="help">The number box is the refractive index. Change it to match your own sputtered films. M (middle index) is optional: it only appears in a design when you write an <code>M</code> in the formula, like <code>H M L</code>.</p>
+      </div>
 
-      <fieldset>
-        <legend>Stack</legend>
+      <div class="card">
+        <h2>Stack</h2>
         <div class="presets" id="presets">
           <button data-p="mirror">Mirror</button>
           <button data-p="longpass">Longpass</button>
@@ -159,11 +190,31 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
         <label class="small" for="formula">Formula, substrate to air</label>
         <input id="formula" type="text" spellcheck="false" autocomplete="off">
         <div class="err" id="err" role="status"></div>
-        <p class="help">The formula is only a quick way to sketch a starting stack: <code>H</code> and <code>L</code> are quarter-waves at λ₀, <code>0.5L</code> half that, <code>(HL)^5</code> repeats 5 times. Every layer is converted to a physical thickness in nm, which is what the table, optimizer and recipe use.</p>
-      </fieldset>
+        <p class="help">The formula is only a quick way to sketch a starting stack: <code>H</code>, <code>M</code> and <code>L</code> are quarter-waves at λ₀, <code>0.5L</code> half that, <code>(HL)^5</code> repeats 5 times. Every layer is converted to a physical thickness in nm, which is what the table, optimizer and recipe use.</p>
+      </div>
 
-      <fieldset>
-        <legend>Targets and optimization</legend>
+      <div class="card">
+        <h2>Compare to a measurement</h2>
+        <p class="help">Reverse-engineer a real scan. Pick the substrate and materials above and put in the layers you deposited (the design, or paste them below). Load your scan and the fit finds how the real coating differs from the model. Set “Back surface” under Plot range to match your sample.</p>
+        <label class="small" for="layerPaste">Layers as deposited (optional), substrate to air, one per line: material (H, M, L or its name), then nm</label>
+        <textarea id="layerPaste" rows="4" spellcheck="false" placeholder="H 65.2&#10;L 94.1&#10;Ta2O5 33.0"></textarea>
+        <div class="btnrow"><button id="useLayers">Use these layers</button></div>
+        <label class="small" for="csvFile">Scan file: CSV or text, wavelength then value</label>
+        <input id="csvFile" type="file" accept=".csv,.txt,.tsv,.dat,text/*">
+        <div class="two">
+          <div><label class="small" for="measQ">The scan is</label><select id="measQ"><option value="T">Transmission</option><option value="R">Reflection</option></select></div>
+          <div><label class="small" for="measU">Wavelength unit</label><select id="measU"><option value="auto">Auto</option><option value="nm">nm</option><option value="um">µm</option></select></div>
+        </div>
+        <label class="check"><input id="fitTool" type="checkbox" checked> Thickness error per material (tooling factor)</label>
+        <label class="check"><input id="fitIdx" type="checkbox"> Refractive index of each material</label>
+        <label class="check"><input id="fitSub" type="checkbox"> Substrate index</label>
+        <label class="check"><input id="fitLayer" type="checkbox"> Each layer’s thickness separately (can overfit)</label>
+        <div class="btnrow"><button id="fitBtn" class="primary">Fit model to scan</button><button id="restoreBtn">Restore ideal design</button></div>
+        <ul class="read" id="fitOut" aria-live="polite"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Targets and optimization</h2>
         <div class="trow head"><span>Spec</span><span>From (nm)</span><span>To (nm)</span><span>%</span><span></span></div>
         <div id="targets" style="display:flex;flex-direction:column;gap:6px"></div>
         <div class="btnrow"><button id="addT">Add target</button><button id="addPair">Add H/L pair</button></div>
@@ -178,10 +229,10 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
         <div class="btnrow"><button id="optBtn" class="primary">Optimize</button><button id="stopBtn" disabled>Stop</button></div>
         <div class="status" id="ostatus" role="status"></div>
         <p class="help">Specs: T or R, at or above (≥) or at or below (≤) the %. “avg” checks the average over the range, otherwise every wavelength must meet it. Optimize adjusts each layer’s physical thickness. With “Add and remove layers” on, it adds a pair wherever that helps most until every target passes, and drops layers that shrink to nothing. Leave a gap between pass and block zones for the edge.</p>
-      </fieldset>
+      </div>
 
-      <fieldset>
-        <legend>Plot range</legend>
+      <div class="card">
+        <h2>Plot range</h2>
         <div class="two">
           <div><label class="small" for="wMin">From (nm)</label><input id="wMin" type="number" value="350"></div>
           <div><label class="small" for="wMax">To (nm)</label><input id="wMax" type="number" value="1100"></div>
@@ -191,25 +242,32 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
           <div><label class="small" for="back">Back surface</label><select id="back"><option value="uncoated">Uncoated</option><option value="coated">Same coating</option><option value="none">Ignore</option></select></div>
         </div>
         <p class="help">R specs are always the coated side alone, the way a reflection scan measures it. T specs include the back surface as set here.</p>
-      </fieldset>
-    </section>
-
-    <section class="panel">
-      <p class="result" id="result">–</p>
-      <p class="sub" id="detail"></p>
-      <ul class="spec" id="spec"></ul>
-      <div class="plotbox"><canvas id="plot" aria-label="Transmission versus wavelength"></canvas></div>
-
-      <div class="stack">
-        <h2>Layer stack</h2>
-        <div class="bar" id="bar"></div>
-        <div class="legend" id="legend"></div>
       </div>
+    </div>
 
-      <details class="table">
-        <summary>Recipe: layer thicknesses</summary>
-        <div class="tscroll"><table><thead><tr><th>#</th><th>Material</th><th>Thickness (nm)</th><th>Running total (nm)</th></tr></thead><tbody id="tbody"></tbody></table></div>
-      </details>
+    <section class="panel results">
+      <div class="res-top">
+        <p class="result" id="result">–</p>
+        <p class="sub" id="detail"></p>
+      </div>
+      <div class="res-body">
+        <div class="res-main">
+          <div class="plotbox"><canvas id="plot" aria-label="Transmission versus wavelength"></canvas></div>
+          <div class="plegend" id="plegend"></div>
+        </div>
+        <div class="res-side">
+          <ul class="spec" id="spec"></ul>
+          <div class="stack">
+            <h2>Layer stack</h2>
+            <div class="bar" id="bar"></div>
+            <div class="legend" id="legend"></div>
+          </div>
+          <details class="table">
+            <summary>Recipe: layer thicknesses</summary>
+            <div class="tscroll"><table><thead><tr><th>#</th><th>Material</th><th>Thickness (nm)</th><th>Running total (nm)</th></tr></thead><tbody id="tbody"></tbody></table></div>
+          </details>
+        </div>
+      </div>
     </section>
   </div>
 </div>
@@ -217,7 +275,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
 <script>
 // ---------- Data ----------
 const SUBSTRATES = {"BK7":1.517, "Green glass (soda-lime)":1.52, "Fused silica / quartz":1.458, "Sapphire":1.76, "CaF2":1.40, "ZnSe":2.40, "Silicon":3.42, "Germanium":4.0};
-const MATERIALS = {"Ta2O5":2.10, "SiO2":1.46, "Nb2O5":2.28, "TiO2":2.35, "Al2O3":1.63, "ZnS":2.20, "Ge":4.00, "YbF3":1.50, "MgF2":1.38};
+const MATERIALS = {"Ta2O5":2.10, "SiO2":1.46, "Nb2O5":2.28, "TiO2":2.35, "Al2O3":1.63, "ZnS":2.20, "Ge":4.00, "YbF3":1.50, "MgF2":1.38, "Y0.9Ba0.1F2.9 (YF3/BaF2 90/10)":1.50};
 const PRESETS = {
   mirror:    n => `(HL)^${n} H`,
   longpass:  n => `(0.5H L 0.5H)^${n}`,
@@ -233,8 +291,9 @@ function fill(sel, obj, pick){
 }
 fill($("subSel"), SUBSTRATES, "BK7");
 fill($("hSel"), MATERIALS, "Ta2O5");
+fill($("mSel"), MATERIALS, "Al2O3");
 fill($("lSel"), MATERIALS, "SiO2");
-[["subSel","subN",SUBSTRATES],["hSel","hN",MATERIALS],["lSel","lN",MATERIALS]].forEach(([s,n,obj])=>{
+[["subSel","subN",SUBSTRATES],["hSel","hN",MATERIALS],["mSel","mN",MATERIALS],["lSel","lN",MATERIALS]].forEach(([s,n,obj])=>{
   $(n).value = obj[$(s).value];
   $(s).addEventListener("change",()=>{ $(n).value = obj[$(s).value]; update(); });
 });
@@ -257,9 +316,9 @@ function parseFormula(src){
         if (s[i] === "^"){ i++; ws(); rep = num(); if(!rep || rep%1) throw Error("Put a whole number after ^, like (HL)^5."); }
         for (let r=0;r<rep;r++) for (const l of inner) out.push({m:l.m, q:l.q*(k??1)});
         ws();
-      } else if (s[i]==="H" || s[i]==="L"){ out.push({m:s[i], q:k??1}); i++; ws(); }
+      } else if (s[i]==="H" || s[i]==="M" || s[i]==="L"){ out.push({m:s[i], q:k??1}); i++; ws(); }
       else if (k!==null && i>=s.length) throw Error("A number needs H, L or a group after it.");
-      else throw Error(s[i] ? `Didn’t expect “${s[i]}” at position ${i+1}. Use H, L, numbers, ( ) and ^.` : "The formula ends early.");
+      else throw Error(s[i] ? `Didn’t expect “${s[i]}” at position ${i+1}. Use H, M, L, numbers, ( ) and ^.` : "The formula ends early.");
     }
     return out;
   }
@@ -361,7 +420,9 @@ function draw(){
   const {xs, ys} = last, x0=xs[0], x1=xs.at(-1);
   const pw = W-M.l-M.r, ph = Hh-M.t-M.b;
   // Zoom the y axis in when everything plotted is small (an AR scan, say)
-  const yMax = [0.02,0.05,0.1,0.2,0.5,1].find(m => m >= Math.max(...ys)*1.05) ?? 1;
+  const maxOf = a => a.reduce((m,v) => v>m ? v : m, 0), measOn = meas && meas.q === last.q;
+  const top = Math.max(maxOf(ys), last.yIdeal ? maxOf(last.yIdeal) : 0, measOn ? maxOf(meas.y) : 0);
+  const yMax = [0.02,0.05,0.1,0.2,0.5,1].find(m => m >= top*1.05) ?? 1;
   const X = x => M.l + (x-x0)/(x1-x0)*pw, Y = t => M.t + (1-Math.min(t,yMax)/yMax)*ph;
   ctx.font = "12px 'Instrument Sans', system-ui, sans-serif";
 
@@ -393,6 +454,18 @@ function draw(){
   // 50% reference line
   if (yMax === 1) ctx.setLineDash([4,4]); ctx.strokeStyle = css("--line"); ctx.beginPath(); ctx.moveTo(M.l,Y(.5)); ctx.lineTo(M.l+pw,Y(.5)); if (yMax === 1) ctx.stroke(); ctx.setLineDash([]);
 
+  // ideal design (dashed) and your scan, under the model curve
+  ctx.save(); ctx.beginPath(); ctx.rect(M.l, M.t-1, pw, ph+2); ctx.clip(); ctx.lineJoin = "round";
+  if (last.yIdeal){
+    ctx.strokeStyle = css("--muted"); ctx.lineWidth = 1.5; ctx.setLineDash([6,4]); ctx.beginPath();
+    xs.forEach((x,k)=> k ? ctx.lineTo(X(x),Y(last.yIdeal[k])) : ctx.moveTo(X(x),Y(last.yIdeal[k]))); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if (measOn){
+    ctx.strokeStyle = css("--meas"); ctx.lineWidth = 1.5; ctx.beginPath();
+    meas.x.forEach((x,k)=> k ? ctx.lineTo(X(x),Y(meas.y[k])) : ctx.moveTo(X(x),Y(meas.y[k]))); ctx.stroke();
+  }
+  ctx.restore();
+
   // the curve
   ctx.save(); ctx.beginPath(); ctx.rect(M.l, M.t-1, pw, ph+2); ctx.clip();
   ctx.strokeStyle = css("--curve"); ctx.lineWidth = 2; ctx.lineJoin="round"; ctx.beginPath();
@@ -420,6 +493,8 @@ cv.addEventListener("mouseleave", ()=>{ hoverX=null; draw(); });
 window.addEventListener("resize", draw);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
 
+const matName = m => $({H:"hSel", M:"mSel", L:"lSel"}[m]).value;
+
 // ---------- Main update ----------
 function update(){
   const nS=+$("subN").value, nH=+$("hN").value, nL=+$("lN").value, lam0=+$("lam0").value;
@@ -437,7 +512,12 @@ function update(){
   if (lam0>wMin && lam0<wMax){ xs.push(lam0); xs.sort((a,b)=>a-b); }
   const yT = xs.map(w => totalT(w, layers, nS, back));
   const ys = q === "R" ? xs.map(w => frontR(w, layers, nS)) : yT;
-  last = {xs, ys, q}; draw();
+  const yIdeal = ideal ? xs.map(w => q === "R" ? frontR(w, ideal.layers, ideal.ns) : totalT(w, ideal.layers, ideal.ns, back)) : null;
+  last = {xs, ys, q, yIdeal}; draw();
+  const mOn = meas && meas.q === q;
+  $("plegend").innerHTML = (ideal ? '<span><i style="background:var(--muted)"></i>Ideal design</span>' : "") +
+    (mOn ? '<span><i style="background:var(--meas)"></i>Your scan</span>' : "") +
+    (ideal || mOn ? `<span><i style="background:var(--curve)"></i>${ideal ? "Model fitted to your scan" : "Model"}</span>` : "");
 
   const [title, detail] = classify(xs, yT);   // filter type always judged from transmission
   $("result").textContent = title; $("detail").textContent = detail;
@@ -452,15 +532,15 @@ function update(){
   const bar = $("bar"); bar.innerHTML = '<div class="s">Sub</div>';
   for (const [i,l] of layers.entries()){
     const d = document.createElement("div"); d.className = l.m; d.style.flex = `${l.t} 1 0`;
-    d.title = `Layer ${i+1}: ${l.m==="H"?$("hSel").value:$("lSel").value}, ${l.t.toFixed(1)} nm`; bar.append(d);
+    d.title = `Layer ${i+1}: ${matName(l.m)}, ${l.t.toFixed(1)} nm`; bar.append(d);
   }
   bar.insertAdjacentHTML("beforeend",'<div class="a">Air</div>');
   const total = layers.reduce((s,l)=>s+l.t,0);
-  $("legend").textContent = `${layers.length} layers, ${(total/1000).toFixed(2)} µm total. Dark = ${$("hSel").value} (H), light = ${$("lSel").value} (L).`;
+  $("legend").textContent = `${layers.length} layers, ${(total/1000).toFixed(2)} µm total. Dark = ${$("hSel").value} (H), ${layers.some(l=>l.m==="M") ? `mid = ${$("mSel").value} (M), ` : ""}light = ${$("lSel").value} (L).`;
 
   let run = 0;
   $("tbody").innerHTML = layers.map((l,i)=>{ run += l.t;
-    return `<tr><td>${i+1}</td><td>${l.m==="H"?$("hSel").value:$("lSel").value}</td><td><input class="tin" data-i="${i}" type="number" step="0.1" min="0" value="${l.t.toFixed(1)}" aria-label="Layer ${i+1} thickness"></td><td>${run.toFixed(1)}</td></tr>`; }).join("");
+    return `<tr><td>${i+1}</td><td>${matName(l.m)}</td><td><input class="tin" data-i="${i}" type="number" step="0.1" min="0" value="${l.t.toFixed(1)}" aria-label="Layer ${i+1} thickness"></td><td>${run.toFixed(1)}</td></tr>`; }).join("");
 }
 
 // ---------- Spec check: worst T inside a target zone ----------
@@ -485,9 +565,10 @@ function specMet(layers, ns, back){ return targets.filter(t=>t.to>t.from).every(
 // physical thicknesses: [{m:"H", t:123.4}, ...] listed substrate to air.
 let custom = null;
 function currentLayers(){
-  const nH=+$("hN").value, nL=+$("lN").value, lam0=+$("lam0").value;
-  if (custom) return custom.map(l => { const n = l.m==="H"?nH:nL; return {m:l.m, n, t:l.t, q:l.t*4*n/lam0}; });
-  try { return parseFormula($("formula").value).map(l => { const n = l.m==="H"?nH:nL; return {...l, n, t: l.q*lam0/(4*n)}; }); }
+  const lam0=+$("lam0").value, idx = {H:+$("hN").value, M:+$("mN").value, L:+$("lN").value};
+  if (!(idx.M>0) && ((custom||[]).some(l=>l.m==="M") || /M/i.test($("formula").value))){ $("err").textContent="Set a positive index for M."; return null; }
+  if (custom) return custom.map(l => { const n = idx[l.m]; return {m:l.m, n, t:l.t, q:l.t*4*n/lam0}; });
+  try { return parseFormula($("formula").value).map(l => { const n = idx[l.m]; return {...l, n, t: l.q*lam0/(4*n)}; }); }
   catch(e){ $("err").textContent = e.message; return null; }
 }
 function useCustom(layers){
@@ -560,7 +641,7 @@ function targetPoints(){
     if (!(t.to>t.from) || !(t.thr>0)) continue;
     const n = Math.min(60, Math.max(12, Math.round((t.to-t.from)/4)));
     const ws = Array.from({length:n}, (_,k) => t.from + (t.to-t.from)*k/(n-1));
-    const ge = tge(t), thr = ge ? Math.min(0.999, t.thr/100 + 0.005) : t.thr/100*0.8;   // safety margin
+    const ge = tge(t), thr = ge ? Math.min(0.999, t.thr/100 + 0.005) : t.thr < 20 ? t.thr/100*0.8 : t.thr/100 - 0.01;   // safety margin
     groups.push({ws, q: tq(t), ge, avg: tavg(t), thr});
   }
   return groups;
@@ -637,9 +718,9 @@ function restructure(){
     L.forEach((l,j) => { if (l.t <= opt.lo + 0.1 && (k<0 || l.t < L[k].t)) k = j; });
     if (k >= 0){
       const trial = L.map(l => ({...l}));
-      if (k>0 && k<trial.length-1){ trial[k-1].t += trial[k+1].t; trial.splice(k,2); } else trial.splice(k,1);
+      if (k>0 && k<trial.length-1 && trial[k-1].m===trial[k+1].m){ trial[k-1].t += trial[k+1].t; trial.splice(k,2); } else trial.splice(k,1);
       const f = merit(trial, opt.pts, opt.ns, opt.back);
-      if (f <= opt.f*1.2 + 1e-9){ opt.L = trial; opt.f = f; opt.removed += (k>0 && k<L.length-1) ? 2 : 1; return resetSteps(); }
+      if (f <= opt.f*1.2 + 1e-9){ opt.L = trial; opt.f = f; opt.removed += L.length - trial.length; return resetSteps(); }
     }
   }
   // Stop adding if the last five added pairs together improved the merit by under 5%
@@ -686,7 +767,7 @@ function finishOpt(why){
   $("ostatus").textContent = msg;
   opt = null; $("optBtn").disabled = false; $("stopBtn").disabled = true; update();
 }
-function cancelOpt(){ if (opt){ opt = null; $("optBtn").disabled = false; $("stopBtn").disabled = true; $("ostatus").textContent = ""; } }
+function cancelOpt(){ ideal = null; $("fitOut").innerHTML = ""; if (opt){ opt = null; $("optBtn").disabled = false; $("stopBtn").disabled = true; $("ostatus").textContent = ""; } }
 $("optBtn").onclick = startOpt;
 $("stopBtn").onclick = () => finishOpt("Stopped");
 
@@ -723,7 +804,8 @@ function parseDescription(raw){
   for (const [re, name] of SUBS) if (re.test(t)) { out.sub = name; break; }
 
   // filter kind
-  const KINDS = [[/anti-?reflect|antireflect|\bar\b|\ba\/r\b|\bbbar\b/, "ar"], [/band-?pass|\bbp\b|\bbpf\b/, "bp"],
+  const KINDS = [[/\bv-?\s?coat|\bvcoat/, "v"], [/beam-?\s?splitter|\bbs\b|50\/50/, "bs"],
+    [/anti-?reflect|antireflect|\bar\b|\ba\/r\b|\bbbar\b/, "ar"], [/band-?pass|\bbp\b|\bbpf\b/, "bp"],
     [/long-?\s?(wave)?\s?pass|\blwp\b|\blp\b|cut-?on/, "lp"], [/short-?\s?(wave)?\s?pass|\bswp\b|\bsp\b|cut-?off/, "sp"],
     [/notch/, "notch"], [/mirror|high[- ]reflect|\bhr\b/, "mirror"]];
   for (const [re, k] of KINDS) if (re.test(t)) { out.kind = k; break; }
@@ -747,7 +829,7 @@ function parseDescription(raw){
     if (/fwhm|bandwidth|band width|\bbw\b|width/.test(before)) out.fwhm = v;
     else if (/cent(er|re)|\bcwl\b/.test(before)) out.center = v;
     else if (/cut-?on|cut-?off|edge|\b50\s*%/.test(before)) out.edge = v;
-    else if (out.kind==="bp" && out.center===null) out.center = v;
+    else if ((out.kind==="bp" || out.kind==="v") && out.center===null) out.center = v;
     else if ((out.kind==="lp" || out.kind==="sp") && out.edge===null) out.edge = v;
   }
 
@@ -808,27 +890,30 @@ function buildFromDescription(){
   useUm = Math.max(...allW) >= 2000;
   // IR edge filters: Ge/ZnS. IR AR needs a low-index outer layer, so ZnS/YbF3.
   const wasIR = ["Ge","ZnS"].includes($("hSel").value);
-  const [hName, lName] = IR ? (kind==="ar" ? ["ZnS","YbF3"] : ["Ge","ZnS"]) : (wasIR ? ["Ta2O5","SiO2"] : [$("hSel").value, $("lSel").value]);
+  const [hName, lName] = IR ? (kind==="ar" || kind==="v" ?["ZnS","YbF3"] : ["Ge","ZnS"]) : (wasIR ? ["Ta2O5","SiO2"] : [$("hSel").value, ($("lSel").value==="SiO2" && (kind==="ar" || kind==="v")) ? "MgF2" : $("lSel").value]);
   const changed = hName !== $("hSel").value || lName !== $("lSel").value;
   $("hSel").value = hName; $("lSel").value = lName;
   if (changed){ $("hN").value = MATERIALS[hName]; $("lN").value = MATERIALS[lName]; }   // otherwise keep your own indices
   const nH = +$("hN").value, nL = +$("lN").value;
   say.push(`Substrate: ${subName} (n ${ns})` + (d.sub ? "" : ", kept from before"));
-  say.push(`Materials: ${hName} (H) and ${lName} (L)` + (changed && IR ? (kind==="ar" ? ", switched for an IR AR (a low-index outer layer is what gets reflection down; Ge and ZnS alone can’t get much below 4% here)" : ", switched for the infrared") : ""));
+  say.push(`Materials: ${hName} (H) and ${lName} (L)` + (changed && !IR && lName==="MgF2" ? ", switched L to MgF2: its lower index is what gets visible AR reflection down" : "") + (changed && IR ? (kind==="ar" || kind==="v" ? ", switched for an IR AR (a low-index outer layer is what gets reflection down; Ge and ZnS alone can’t get much below 4% here)" : ", switched for the infrared") : ""));
 
   // turn specs into targets
   const R = (a,b) => ({a: Math.round(a), b: Math.round(b)});
   const main = ranges[0] ? R(ranges[0].a, ranges[0].b) : null;
-  const newT = [], label = {ar:"Anti-reflection", lp:"Longpass", sp:"Shortpass", bp:"Bandpass", mirror:"High reflector", notch:"Notch"}[kind];
+  const newT = [], label = {ar:"Anti-reflection", v:"V-coat", bs:"Beamsplitter", lp:"Longpass", sp:"Shortpass", bp:"Bandpass", mirror:"High reflector", notch:"Notch"}[kind];
+  // beamsplitter: one split ratio (reflected %), judged on the coated side's reflection
+  let split = 50;
+  if (kind==="bs"){ const s0 = d.specs[0]; if (s0) split = s0.q==="T" ? 100-s0.pct : s0.pct; d.specs = []; }
   const typeOf = s => s.q + (s.avg ? "avg" : "") + (s.ge ? "≥" : "≤");
   const addT = (type, a, b, thr, dflt) => { newT.push({type, from: Math.round(a), to: Math.round(b), thr}); if (dflt) say.push(`Assumed: ${type} ${thr}% from ${fmtW(a)} to ${fmtW(b)}`); };
 
   let c = d.center, w = d.fwhm, e = d.edge;
-  if (kind==="bp"){
+  if (kind==="bp" || kind==="v"){
     if (!c && main) c = (main.a+main.b)/2;
-    if (!w) w = main ? main.b-main.a : c*0.02;
-    if (!c){ read.innerHTML = '<li class="warn">For a bandpass, give a center wavelength, like “center 532 nm, FWHM 10 nm”.</li>'; return; }
+    if (!c){ read.innerHTML = `<li class="warn">${kind==="bp" ? "For a bandpass, give a center wavelength, like “center 532 nm, FWHM 10 nm”." : "For a V-coat, give its wavelength, like “V-coat at 1064 nm”."}</li>`; return; }
   }
+  if (kind==="bp" && !w) w = main ? main.b-main.a : c*0.02;
   if ((kind==="lp" || kind==="sp") && !e){
     const pass = d.specs.find(s => s.q==="T" && s.ge && s.range), block = d.specs.find(s => s.q==="T" && !s.ge && s.range);
     if (pass && block) e = kind==="lp" ? (block.range.b + pass.range.a)/2 : (pass.range.b + block.range.a)/2;
@@ -839,6 +924,7 @@ function buildFromDescription(){
     if (!r){
       if (kind==="bp" && s.q==="T" && s.ge) r = R(c - w*0.1, c + w*0.1);
       else if (main && !(kind==="lp"||kind==="sp")) r = main;
+      else if (kind==="v") r = R(c*0.99, c*1.01);
       else if (kind==="lp" && e) r = s.ge ? R(e*1.04, e*1.5) : R(e*0.78, e*0.95);
       else if (kind==="sp" && e) r = s.ge ? R(e*0.7, e*0.96) : R(e*1.05, e*1.3);
     }
@@ -849,7 +935,15 @@ function buildFromDescription(){
   const has = (q, ge) => newT.some(x => x.type[0]===q && x.type.includes(ge?"≥":"≤"));
   if (kind==="ar"){
     if (!main && !newT.length){ read.innerHTML = '<li class="warn">For an AR coating, give the range, like “AR 3 to 5 microns”.</li>'; return; }
-    if (!has("R", false)) addT("Ravg≤", main.a, main.b, 1, true);
+    // every range gets its own reflection target (dual-band AR has two)
+    const thr = newT.filter(x => x.type[0]==="R" && x.type.includes("≤")).at(-1)?.thr ?? 1;
+    for (const rr of ranges.map(r => R(r.a, r.b)))
+      if (!newT.some(x => x.type[0]==="R" && x.type.includes("≤") && x.from <= rr.a+1 && x.to >= rr.b-1)) addT("Ravg≤", rr.a, rr.b, thr, true);
+  } else if (kind==="v"){
+    if (!has("R", false)) addT("Ravg≤", main ? main.a : c*0.99, main ? main.b : c*1.01, 0.25, true);
+  } else if (kind==="bs"){
+    if (!main){ read.innerHTML = '<li class="warn">Give the range to split, like “50/50 beamsplitter 450-650 nm”.</li>'; return; }
+    addT("Ravg≥", main.a, main.b, split-5, true); addT("Ravg≤", main.a, main.b, split+5, true);
   } else if (kind==="lp" || kind==="sp"){
     if (!e){ read.innerHTML = '<li class="warn">Give the edge, like “cut-on 650 nm”, or a block range and a pass range.</li>'; return; }
     const lp = kind==="lp";
@@ -873,6 +967,8 @@ function buildFromDescription(){
   let lam0, formula;
   const lo = Math.min(...newT.map(x=>x.from)), hi = Math.max(...newT.map(x=>x.to));
   if (kind==="ar"){ lam0 = (lo+hi)/2; formula = "H L"; }
+  else if (kind==="v"){ lam0 = c; formula = "H L"; }
+  else if (kind==="bs"){ lam0 = (lo+hi)/2; formula = "H L H"; }
   else if (kind==="lp"){ lam0 = e/(1+D); formula = `(0.5H L 0.5H)^${reps}`; }
   else if (kind==="sp"){ lam0 = e/(1-D); formula = `(0.5L H 0.5L)^${reps}`; }
   else if (kind==="bp"){ lam0 = c; formula = `(HL)^4 2H (LH)^4`; }
@@ -882,22 +978,163 @@ function buildFromDescription(){
   // plot window, layer limits, plot quantity, back surface
   const pad = Math.max(20, (hi-lo)*0.15);
   $("wMin").value = Math.max(100, Math.round(lo - pad)); $("wMax").value = Math.round(hi + pad);
+  if (kind==="v" && !main){ $("wMin").value = Math.round(c*0.7); $("wMax").value = Math.round(c*1.3); }   // show the V
   $("maxT").value = Math.max(+$("maxT").value || 0, 500, Math.ceil(hi/(2*Math.min(nH,nL))/10)*10);
   $("plotQ").value = newT.some(x => x.type[0]==="R") ? "R" : "T";
   if (d.back) $("back").value = d.back;
-  else if (kind==="ar"){ $("back").value = "coated"; say.push("Back surface: same coating, as AR windows are usually coated on both sides"); }
+  else if (kind==="ar" || kind==="v"){ $("back").value = "coated"; say.push("Back surface: same coating, as AR windows are usually coated on both sides"); }
 
   targets = newT; renderTargets();
   cancelOpt(); custom = null; activePreset = null;
   document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed","false"));
   $("lam0").value = lam0; $("formula").value = formula; $("formula").placeholder = "";
-  say.splice(2, 0, `Filter: ${label}` + (kind==="bp" ? `, center ${fmtW(c)}, FWHM ${fmtW(w, useUm?3:1)}` : (kind==="lp"||kind==="sp") ? `, edge ${fmtW(e)}` : ""));
+  say.splice(2, 0, `Filter: ${label}` + (kind==="bp" ? `, center ${fmtW(c)}, FWHM ${fmtW(w, useUm?3:1)}` : kind==="v" ? `, minimum reflection at ${fmtW(c)}` : kind==="bs" ? `, ${split}% reflected / ${100-split}% transmitted` :(kind==="lp"||kind==="sp") ? `, edge ${fmtW(e)}` : ""));
   say.push(`Starting stack: ${formula} at λ₀ ${fmtW(lam0)}, then optimizing`);
   read.innerHTML = say.map(x => `<li>${x}</li>`).join("") + warn.map(x => `<li class="warn">${x}</li>`).join("");
   update(); startOpt();
 }
 $("buildBtn").onclick = buildFromDescription;
+$("ftype").onchange = () => { if ($("ftype").value){ $("desc").value = $("ftype").value; $("desc").focus(); } };
 document.querySelectorAll(".chips button").forEach(b => b.onclick = () => { $("desc").value = b.dataset.ex; buildFromDescription(); });
+
+// ---------- Compare to a measurement ----------
+// meas = {x (nm), y (0..1), q}. ideal = the design as it was before a fit.
+let meas = null, rawScan = "", ideal = null;
+const say = (arr, warn) => { $("fitOut").innerHTML = arr.map(x => `<li${warn ? ' class="warn"' : ""}>${x}</li>`).join(""); };
+
+function parseScan(text){
+  const pts = [];
+  for (const line of text.split(/\r?\n/)){
+    const tok = line.trim().replace(/"/g,"").split(/[,;\t]+|\s+/).filter(Boolean);
+    if (tok.length < 2) continue;
+    const a = Number(tok[0]), b = Number(tok[1]);
+    if (Number.isFinite(a) && Number.isFinite(b)) pts.push([a, b]);
+  }
+  pts.sort((p,r) => p[0]-r[0]);
+  return pts.filter((p,k) => !k || p[0] > pts[k-1][0]);
+}
+function loadScan(){
+  if (!rawScan) return;
+  const pts = parseScan(rawScan), q = $("measQ").value, u = $("measU").value;
+  if (pts.length < 10){ meas = null; say(["I couldn’t find two numeric columns (wavelength, value) with at least 10 rows."], true); update(); return; }
+  const mx = pts.reduce((m,p) => Math.max(m,p[0]), 0), my = pts.reduce((m,p) => Math.max(m,p[1]), 0);
+  const wk = (u === "um" || (u === "auto" && mx < 100)) ? 1000 : 1, pct = my > 1.5;
+  meas = {x: pts.map(p => p[0]*wk), y: pts.map(p => p[1]/(pct ? 100 : 1)), q};
+  $("plotQ").value = q; $("wMin").value = Math.floor(meas.x[0]); $("wMax").value = Math.ceil(meas.x.at(-1));
+  say([`Loaded ${pts.length} points, ${fmtW(meas.x[0])} to ${fmtW(meas.x.at(-1))}, read as ${pct ? "percent" : "fractions"} ${q === "T" ? "transmission" : "reflection"}.`]);
+  update();
+}
+$("csvFile").onchange = e => { const f = e.target.files[0]; if (f) f.text().then(t => { rawScan = t; loadScan(); }); };
+["measQ","measU"].forEach(id => $(id).addEventListener("change", loadScan));
+
+// Layers as deposited: "H 65.2" or "Ta2O5 65.2" per line, substrate to air
+$("useLayers").onclick = () => {
+  const names = {H: $("hSel").value, M: $("mSel").value, L: $("lSel").value}, out = [], bad = [];
+  for (const line of $("layerPaste").value.split(/\r?\n/)){
+    const t = line.trim(); if (!t) continue;
+    const m = /^(.*?)[\s,;:\t]+(\d+(?:\.\d+)?)\s*(nm)?$/i.exec(t);
+    if (!m){ bad.push(t); continue; }
+    const key = m[1].trim(), up = key.toUpperCase();
+    const id = ["H","M","L"].includes(up) ? up : ["H","M","L"].find(k => names[k].toLowerCase() === key.toLowerCase());
+    if (!id) bad.push(t); else out.push({m: id, t: +m[2]});
+  }
+  if (bad.length || !out.length){
+    say([out.length || bad.length ? `Couldn’t read: ${bad.join("; ")}. Use H, M, L or one of: ${Object.entries(names).map(([k,v]) => `${v} (${k})`).join(", ")}, then the thickness in nm.` : "Paste at least one layer first."], true); return; }
+  cancelOpt(); useCustom(out); say([`Using ${out.length} layers as deposited, ${out.reduce((s,l)=>s+l.t,0).toFixed(0)} nm total.`]); update();
+};
+
+// Fit: scale each material's thickness (tooling), shift indices, optionally per layer.
+// Step 1 scans tooling factors on a grid (thin-film curves have many local dips,
+// so it must not start from just one guess), step 2 refines with a pattern search.
+const names3 = k => `${matName(k)} (${k})`;
+function runFit(){
+  if (!meas){ say(["Load a scan file first."], true); return; }
+  const base = currentLayers(); if (!base) return;
+  const o = {tool: $("fitTool").checked, idx: $("fitIdx").checked, sub: $("fitSub").checked, layer: $("fitLayer").checked};
+  if (!(o.tool || o.idx || o.sub || o.layer)){ say(["Tick at least one thing to fit."], true); return; }
+  const n0 = {H:+$("hN").value, M:+$("mN").value, L:+$("lN").value}, ns0 = +$("subN").value, back = $("back").value, q = meas.q;
+  const used = ["H","M","L"].filter(k => base.some(l => l.m === k));
+  const pick = cap => { const st = Math.max(1, Math.ceil(meas.x.length/cap)), ws = [], ys = [];
+    meas.x.forEach((x,k) => { if (k % st === 0){ ws.push(x); ys.push(meas.y[k]); } }); return {ws, ys}; };
+  const fine = pick(400), coarse = pick(120);
+  const fresh = () => ({tool:{H:1,M:1,L:1}, dn:{H:0,M:0,L:0}, dns:0, ls: base.map(() => 1)});
+  const build = P => base.map((l,i) => ({m:l.m, n:n0[l.m]+P.dn[l.m], t:l.t*P.tool[l.m]*P.ls[i]}));
+  const err = (P, set) => { const L = build(P), ns = ns0+P.dns; let s = 0;
+    for (let k=0;k<set.ws.length;k++){ const v = q === "R" ? frontR(set.ws[k], L, ns) : totalT(set.ws[k], L, ns, back); s += (v-set.ys[k])**2; }
+    return Math.sqrt(s/set.ws.length); };
+  const descend = (P, defs, set, ms) => {
+    const end = performance.now() + ms; let cur = err(P, set);
+    while (performance.now() < end && defs.some(d => d.s > d.step*0.02)){
+      for (const d of defs){
+        let hit = false;
+        for (const dir of [1,-1]){
+          const old = d.obj[d.key], nv = Math.min(d.hi, Math.max(d.lo, old + dir*d.s)); if (nv === old) continue;
+          d.obj[d.key] = nv; const e = err(P, set);
+          if (e < cur){ cur = e; hit = true; break; } d.obj[d.key] = old;
+        }
+        d.s = hit ? Math.min(d.s*1.5, d.step*8) : d.s*0.5;
+      }
+    }
+    return cur;
+  };
+  const mkDefs = (P, withLayer) => { const defs = [], add = (obj,key,step,lo,hi) => defs.push({obj,key,step,s:step,lo,hi});
+    if (o.tool) used.forEach(k => add(P.tool,k,0.004,0.8,1.2));
+    if (o.idx) used.forEach(k => add(P.dn,k,0.01,-0.3,0.3));
+    if (o.sub) add(P,"dns",0.01,-0.3,0.3);
+    if (withLayer) base.forEach((_,i) => add(P.ls,i,0.01,0.7,1.3));
+    return defs; };
+
+  say(["Fitting…"]);
+  setTimeout(() => {
+    const e0 = err(fresh(), fine), starts = [];
+    if (o.tool){
+      const g = Array.from({length:17}, (_,k) => 0.92 + 0.01*k), cands = [], P = fresh();
+      const walk = i => { if (i === used.length){ cands.push({e: err(P, used.length > 2 ? coarse : fine), v: used.map(k => P.tool[k])}); return; }
+        for (const v of g){ P.tool[used[i]] = v; walk(i+1); } };
+      walk(0); cands.sort((a,b) => a.e - b.e);
+      for (const c of cands){ if (starts.length < 6 && starts.every(s => s.v.some((x,i) => Math.abs(x - c.v[i]) >= 0.02))) starts.push(c); }
+    } else starts.push({v: used.map(() => 1)});
+    let best = null;
+    for (const st of starts){
+      const P = fresh(); used.forEach((k,i) => P.tool[k] = st.v[i]);
+      const e = descend(P, mkDefs(P, false), fine, 600);
+      if (!best || e < best.e) best = {e, P};
+    }
+    const P = best.P; let eAfter = best.e;
+    if (o.layer) eAfter = descend(P, mkDefs(P, true), fine, 2500);
+
+    // keep the design as the dashed "ideal" curve, then adopt the fitted model
+    ideal = {layers: base.map(l => ({...l})), ns: ns0};
+    const fitted = build(P);
+    useCustom(fitted);
+    if (o.idx) used.forEach(k => { $({H:"hN",M:"mN",L:"lN"}[k]).value = +(n0[k]+P.dn[k]).toFixed(4); });
+    if (o.sub) $("subN").value = +(ns0+P.dns).toFixed(4);
+
+    const pc = x => (x*100).toFixed(2), sg = x => (x >= 1 ? "+" : "") + ((x-1)*100).toFixed(1) + "%";
+    const out = [`Difference from your scan (RMS): ${pc(e0)}% points before, ${pc(eAfter)}% after.`];
+    if (o.tool) used.forEach(k => out.push(`${names3(k)} thickness ×${P.tool[k].toFixed(3)} (${sg(P.tool[k])})`));
+    if (o.idx) used.forEach(k => out.push(`${names3(k)} index ${n0[k].toFixed(3)} → ${(n0[k]+P.dn[k]).toFixed(3)}`));
+    if (o.sub) out.push(`Substrate index ${ns0.toFixed(3)} → ${(ns0+P.dns).toFixed(3)}`);
+    if (o.layer){
+      const dev = base.map((l,i) => ({i, k: P.ls[i]*P.tool[l.m]})).filter(d => Math.abs(d.k-1) > 0.01).sort((a,b) => Math.abs(b.k-1)-Math.abs(a.k-1)).slice(0,5);
+      if (dev.length) out.push("Biggest layer differences: " + dev.map(d => `#${d.i+1} ${names3(base[d.i].m)} ${sg(d.k)}`).join(", "));
+    }
+    const tot = base.reduce((s,l) => s+l.t, 0), over = fitted.reduce((s,l) => s+l.t, 0)/tot;
+    if (Math.abs(over-1) > 0.005) out.push(`Overall your coating is about ${Math.abs((over-1)*100).toFixed(1)}% ${over > 1 ? "thicker" : "thinner"} than the design, so features move about that much toward ${over > 1 ? "longer" : "shorter"} wavelengths (a 650 nm edge lands near ${Math.round(650*over)} nm).`);
+    say(out);
+    if (eAfter > 0.01) $("fitOut").insertAdjacentHTML("beforeend", '<li class="warn">A mismatch above 1% points left over usually means something outside the model: absorption or scatter, index that changes with wavelength, a different layer count or order, or the wrong back-surface setting.</li>');
+    update();
+  }, 30);
+}
+$("fitBtn").onclick = runFit;
+$("restoreBtn").onclick = () => {
+  if (!ideal){ say(["Nothing to restore: no fit has been applied."], true); return; }
+  const L = ideal.layers, ns = ideal.ns;
+  const idx = {H: L.find(l=>l.m==="H")?.n, M: L.find(l=>l.m==="M")?.n, L: L.find(l=>l.m==="L")?.n};
+  useCustom(L); ideal = null;
+  if (idx.H) $("hN").value = idx.H; if (idx.M) $("mN").value = idx.M; if (idx.L) $("lN").value = idx.L; $("subN").value = ns;
+  say(["Restored the ideal design."]); update();
+};
 
 // ---------- Wiring ----------
 function setPreset(p){
@@ -909,10 +1146,17 @@ function setPreset(p){
 document.querySelectorAll("#presets button").forEach(b=>b.addEventListener("click",()=>setPreset(b.dataset.p)));
 $("pairs").addEventListener("input", ()=>{ if(activePreset && !opt) setPreset(activePreset); });
 $("formula").addEventListener("input", ()=>{ cancelOpt(); activePreset=null; custom=null; $("formula").placeholder=""; document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed","false")); update(); });
-["subN","hN","lN","lam0","wMin","wMax","back","plotQ"].forEach(id=>$(id).addEventListener("input", update));
+["subN","hN","mN","lN","lam0","wMin","wMax","back","plotQ"].forEach(id=>$(id).addEventListener("input", update));
 
 renderTargets();
 setPreset("longpass");
+// Placeholder design shown on load (not optimized): a two-layer V-coat, H then L, on green glass.
+// No targets, so nothing is marked as passed or failed until you set some up.
+$("subSel").value = "Green glass (soda-lime)"; $("subN").value = SUBSTRATES["Green glass (soda-lime)"];
+$("lam0").value = 550; $("wMin").value = 400; $("wMax").value = 700; $("plotQ").value = "R"; $("back").value = "none";
+targets = []; renderTargets();
+activePreset = null; document.querySelectorAll("#presets button").forEach(b => b.setAttribute("aria-pressed","false"));
+$("formula").value = "H L"; update();
 </script>
 </body>
 </html>
