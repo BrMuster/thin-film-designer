@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thin Film Filter Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0F3; --panel:#FFFFFF; --ink:#1C2530; --muted:#5B6775; --line:#CDD4DC;
+  --accent:#3A3F9E; --accent-hover:#2B2F80; --accent-soft:#E3E4F6;
+  --H:#2F5D7C; --L:#BFD8E6; --sub:#9AA6B2; --curve:#3A3F9E; --grid:#E2E7EC; --err:#B3261E;
+  --ok:#2E7D4F; --passZone:rgba(46,125,79,.10); --blockZone:rgba(179,38,30,.08);
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12171D; --panel:#1A2129; --ink:#E4E9EE; --muted:#93A0AD; --line:#2C3743;
+    --accent:#8E93F0; --accent-hover:#B0B4F7; --accent-soft:#272C52;
+    --H:#6FA6C8; --L:#2A4556; --sub:#4A5562; --curve:#A3A7F5; --grid:#232C36; --err:#F2827B;
+    --ok:#6CC594; --passZone:rgba(108,197,148,.13); --blockZone:rgba(242,130,123,.12);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12171D; --panel:#1A2129; --ink:#E4E9EE; --muted:#93A0AD; --line:#2C3743;
+  --accent:#8E93F0; --accent-hover:#B0B4F7; --accent-soft:#272C52;
+  --H:#6FA6C8; --L:#2A4556; --sub:#4A5562; --curve:#A3A7F5; --grid:#232C36; --err:#F2827B;
+    --ok:#6CC594; --passZone:rgba(108,197,148,.13); --blockZone:rgba(242,130,123,.12);
+  color-scheme: dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
+header h1{font-size:1.6rem;margin:0;letter-spacing:-0.01em;font-weight:700}
+header p{margin:4px 0 0;color:var(--muted);max-width:70ch}
+.grid{display:grid;gap:16px;margin-top:18px}
+@media(min-width:900px){.grid{grid-template-columns:340px 1fr;align-items:start}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.controls{display:flex;flex-direction:column;gap:14px}
+@media(max-width:899px){.controls{order:2}}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+legend{font-weight:600;padding:0;margin-bottom:6px}
+.row{display:grid;grid-template-columns:auto 1fr 76px;gap:8px;align-items:center}
+.row .tag{width:22px;height:22px;border-radius:5px;display:grid;place-items:center;font-weight:700;font-size:.8rem}
+.tag.h{background:var(--H);color:#fff} .tag.l{background:var(--L);color:var(--ink)} .tag.s{background:var(--sub);color:#fff}
+label.small{font-size:.85rem;color:var(--muted)}
+select,input[type=number],input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+input[type=text]{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;cursor:pointer;border-radius:6px;padding:6px 12px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);transition:background-color .15s,border-color .15s,color .15s}
+button:hover{border-color:var(--accent);background:var(--accent-soft)}
+button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+button[aria-pressed="true"]:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.err{color:var(--err);font-size:.85rem;min-height:1.2em}
+.check{display:flex;gap:8px;align-items:center}
+.result{font-size:1.15rem;font-weight:600;margin:0 0 2px}
+.sub{color:var(--muted);margin:0 0 12px;font-size:.9rem}
+.plotbox{position:relative}
+canvas{display:block;width:100%;height:340px;touch-action:pan-y}
+@media(max-width:600px){canvas{height:260px}}
+.stack{margin-top:16px}
+.stack h2,.table h2{font-size:1rem;margin:0 0 6px}
+.bar{display:flex;height:42px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.bar div{min-width:1px}
+.bar .s{flex:0 0 56px;background:var(--sub);color:#fff;font-size:.75rem;display:grid;place-items:center}
+.bar .a{flex:0 0 40px;background:var(--bg);color:var(--muted);font-size:.75rem;display:grid;place-items:center}
+.bar .H{background:var(--H)} .bar .L{background:var(--L)}
+.legend{display:flex;gap:14px;font-size:.85rem;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600}
+.tscroll{overflow-x:auto;max-height:320px;overflow-y:auto;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.9rem}
+th,td{text-align:right;padding:4px 10px;border-bottom:1px solid var(--line)}
+th:nth-child(2),td:nth-child(2){text-align:left}
+th{position:sticky;top:0;background:var(--panel)}
+td input.tin{width:90px;text-align:right;padding:3px 6px;font-variant-numeric:tabular-nums}
+.help{font-size:.85rem;color:var(--muted);margin:0}
+.trow{display:grid;grid-template-columns:84px 1fr 1fr 56px 30px;gap:6px;align-items:center}
+.trow.head{font-size:.8rem;color:var(--muted)}
+.trow select,.trow input{padding:5px 6px}
+button.x{padding:4px 0;color:var(--muted)}
+button.x:hover{border-color:var(--err);color:var(--err);background:transparent}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:600}
+button.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+button:disabled,button:disabled:hover{opacity:.45;cursor:not-allowed;background:var(--panel);border-color:var(--line);color:var(--ink)}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap}
+.status{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums;min-height:1.3em}
+.spec{list-style:none;padding:0;margin:0 0 12px;font-size:.9rem;font-variant-numeric:tabular-nums}
+.spec li{padding:2px 0}
+.spec .y{color:var(--ok);font-weight:600} .spec .n{color:var(--err);font-weight:600}
+textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;resize:vertical;min-height:72px}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font-size:.8rem;padding:3px 10px;border-radius:999px;color:var(--muted)}
+.chips button:hover{color:var(--accent)}
+.read{list-style:none;margin:0;padding:8px 10px;background:var(--accent-soft);border-radius:6px;font-size:.85rem}
+.read:empty{display:none}
+.read li{padding:1px 0}
+.read li::before{content:"→ ";color:var(--accent);font-weight:600}
+.read li.warn::before{content:"! ";color:var(--err)}
+.trow select{font-size:.85rem}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Thin Film Filter Designer</h1>
+    <p>Pick a substrate and two coating materials, describe the stack, and see the transmission curve and what kind of filter it makes.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel controls" aria-label="Design settings">
+      <fieldset>
+        <legend>Describe the filter</legend>
+        <textarea id="desc" rows="3" placeholder="Germanium substrate, anti-reflection coating 3 to 5 microns, average reflection less than 3%"></textarea>
+        <div class="chips" aria-label="Examples">
+          <button data-ex="Germanium substrate anti-reflective coating from 3 microns to 5 microns, average reflection less than 3% between 3 and 5 microns">Ge AR 3–5 µm</button>
+          <button data-ex="BK7 longpass, cut-on 650 nm, block 400-620 nm OD 2, transmission above 90% from 670 to 1000 nm">Longpass 650 nm</button>
+          <button data-ex="Bandpass on fused silica, center 532 nm, FWHM 10 nm, peak transmission > 80%">Bandpass 532 nm</button>
+          <button data-ex="Green glass, visible AR 425-675 nm, Ravg < 0.5%">Visible AR</button>
+        </div>
+        <button id="buildBtn" class="primary">Set up and optimize</button>
+        <ul class="read" id="read" aria-live="polite"></ul>
+      </fieldset>
+
+      <fieldset>
+        <legend>Materials</legend>
+        <div class="row"><span class="tag s">S</span><select id="subSel"></select><input id="subN" type="number" step="0.001" aria-label="Substrate index"></div>
+        <div class="row"><span class="tag h">H</span><select id="hSel"></select><input id="hN" type="number" step="0.01" aria-label="High index"></div>
+        <div class="row"><span class="tag l">L</span><select id="lSel"></select><input id="lN" type="number" step="0.01" aria-label="Low index"></div>
+        <p class="help">The number box is the refractive index. Change it to match your own sputtered films.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Stack</legend>
+        <div class="presets" id="presets">
+          <button data-p="mirror">Mirror</button>
+          <button data-p="longpass">Longpass</button>
+          <button data-p="shortpass">Shortpass</button>
+          <button data-p="bandpass">Bandpass</button>
+        </div>
+        <div class="two">
+          <div><label class="small" for="pairs">Repeats</label><input id="pairs" type="number" min="1" max="40" value="8"></div>
+          <div><label class="small" for="lam0">Design λ₀ (nm)</label><input id="lam0" type="number" min="100" value="550"></div>
+        </div>
+        <label class="small" for="formula">Formula, substrate to air</label>
+        <input id="formula" type="text" spellcheck="false" autocomplete="off">
+        <div class="err" id="err" role="status"></div>
+        <p class="help">The formula is only a quick way to sketch a starting stack: <code>H</code> and <code>L</code> are quarter-waves at λ₀, <code>0.5L</code> half that, <code>(HL)^5</code> repeats 5 times. Every layer is converted to a physical thickness in nm, which is what the table, optimizer and recipe use.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Targets and optimization</legend>
+        <div class="trow head"><span>Spec</span><span>From (nm)</span><span>To (nm)</span><span>%</span><span></span></div>
+        <div id="targets" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div class="btnrow"><button id="addT">Add target</button><button id="addPair">Add H/L pair</button></div>
+        <div class="two">
+          <div><label class="small" for="minT">Thinnest layer (nm)</label><input id="minT" type="number" min="0" value="10"></div>
+          <div><label class="small" for="maxT">Thickest layer (nm)</label><input id="maxT" type="number" min="1" value="500"></div>
+        </div>
+        <div class="two">
+          <div><label class="small" for="maxL">Most layers allowed</label><input id="maxL" type="number" min="2" value="80"></div>
+          <label class="check" style="align-self:end;padding-bottom:6px"><input id="autoL" type="checkbox" checked> Add and remove layers</label>
+        </div>
+        <div class="btnrow"><button id="optBtn" class="primary">Optimize</button><button id="stopBtn" disabled>Stop</button></div>
+        <div class="status" id="ostatus" role="status"></div>
+        <p class="help">Specs: T or R, at or above (≥) or at or below (≤) the %. “avg” checks the average over the range, otherwise every wavelength must meet it. Optimize adjusts each layer’s physical thickness. With “Add and remove layers” on, it adds a pair wherever that helps most until every target passes, and drops layers that shrink to nothing. Leave a gap between pass and block zones for the edge.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Plot range</legend>
+        <div class="two">
+          <div><label class="small" for="wMin">From (nm)</label><input id="wMin" type="number" value="350"></div>
+          <div><label class="small" for="wMax">To (nm)</label><input id="wMax" type="number" value="1100"></div>
+        </div>
+        <div class="two">
+          <div><label class="small" for="plotQ">Plot</label><select id="plotQ"><option value="T">Transmission</option><option value="R">Reflection (coated side)</option></select></div>
+          <div><label class="small" for="back">Back surface</label><select id="back"><option value="uncoated">Uncoated</option><option value="coated">Same coating</option><option value="none">Ignore</option></select></div>
+        </div>
+        <p class="help">R specs are always the coated side alone, the way a reflection scan measures it. T specs include the back surface as set here.</p>
+      </fieldset>
+    </section>
+
+    <section class="panel">
+      <p class="result" id="result">–</p>
+      <p class="sub" id="detail"></p>
+      <ul class="spec" id="spec"></ul>
+      <div class="plotbox"><canvas id="plot" aria-label="Transmission versus wavelength"></canvas></div>
+
+      <div class="stack">
+        <h2>Layer stack</h2>
+        <div class="bar" id="bar"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <details class="table">
+        <summary>Recipe: layer thicknesses</summary>
+        <div class="tscroll"><table><thead><tr><th>#</th><th>Material</th><th>Thickness (nm)</th><th>Running total (nm)</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      </details>
+    </section>
+  </div>
+</div>
+
+<script>
+// ---------- Data ----------
+const SUBSTRATES = {"BK7":1.517, "Green glass (soda-lime)":1.52, "Fused silica / quartz":1.458, "Sapphire":1.76, "CaF2":1.40, "ZnSe":2.40, "Silicon":3.42, "Germanium":4.0};
+const MATERIALS = {"Ta2O5":2.10, "SiO2":1.46, "Nb2O5":2.28, "TiO2":2.35, "Al2O3":1.63, "ZnS":2.20, "Ge":4.00, "YbF3":1.50, "MgF2":1.38};
+const PRESETS = {
+  mirror:    n => `(HL)^${n} H`,
+  longpass:  n => `(0.5H L 0.5H)^${n}`,
+  shortpass: n => `(0.5L H 0.5L)^${n}`,
+  bandpass:  n => `(HL)^${n} 2H (LH)^${n}`
+};
+const $ = id => document.getElementById(id);
+let activePreset = "longpass";
+
+function fill(sel, obj, pick){
+  for (const k in obj){ const o=document.createElement("option"); o.value=k; o.textContent=k; sel.append(o); }
+  sel.value = pick;
+}
+fill($("subSel"), SUBSTRATES, "BK7");
+fill($("hSel"), MATERIALS, "Ta2O5");
+fill($("lSel"), MATERIALS, "SiO2");
+[["subSel","subN",SUBSTRATES],["hSel","hN",MATERIALS],["lSel","lN",MATERIALS]].forEach(([s,n,obj])=>{
+  $(n).value = obj[$(s).value];
+  $(s).addEventListener("change",()=>{ $(n).value = obj[$(s).value]; update(); });
+});
+
+// ---------- Formula parser: turns "(HL)^3 H" into a list of layers ----------
+function parseFormula(src){
+  // Spaces separate tokens, so "(HL)^4 2H" means 4 repeats, then a 2H layer
+  const s = src.toUpperCase().replace(/\*/g," "); let i = 0;
+  const ws = () => { while (i < s.length && /\s/.test(s[i])) i++; };
+  const num = () => { const m = /^\d*\.?\d+/.exec(s.slice(i)); if(m){ i+=m[0].length; return parseFloat(m[0]); } return null; };
+  function seq(){
+    const out = [];
+    ws();
+    while (i < s.length && s[i] !== ")"){
+      const k = num(); ws();
+      if (s[i] === "("){
+        i++; const inner = seq(); ws();
+        if (s[i] !== ")") throw Error("Missing a closing “)”.");
+        i++; let rep = 1; ws();
+        if (s[i] === "^"){ i++; ws(); rep = num(); if(!rep || rep%1) throw Error("Put a whole number after ^, like (HL)^5."); }
+        for (let r=0;r<rep;r++) for (const l of inner) out.push({m:l.m, q:l.q*(k??1)});
+        ws();
+      } else if (s[i]==="H" || s[i]==="L"){ out.push({m:s[i], q:k??1}); i++; ws(); }
+      else if (k!==null && i>=s.length) throw Error("A number needs H, L or a group after it.");
+      else throw Error(s[i] ? `Didn’t expect “${s[i]}” at position ${i+1}. Use H, L, numbers, ( ) and ^.` : "The formula ends early.");
+    }
+    return out;
+  }
+  const raw = seq();
+  if (i < s.length) throw Error("There’s an extra “)”.");
+  if (!raw.length) throw Error("Add at least one layer, like (HL)^5 H.");
+  const merged = [];   // 0.5L next to 0.5L becomes one 1.0L layer
+  for (const l of raw){ const last = merged[merged.length-1]; if (last && last.m===l.m) last.q += l.q; else merged.push({...l}); }
+  if (merged.length > 500) throw Error("That’s over 500 layers. Try fewer repeats.");
+  return merged;
+}
+
+// ---------- The physics: characteristic (transfer) matrix ----------
+// For lossless layers the matrix is [[a, i·b],[i·c, d]] with a,b,c,d real,
+// so we track four real numbers instead of doing complex math.
+function frontT(lam, layers, ns){
+  let a=1, b=0, c=0, d=1;
+  for (let k = layers.length-1; k >= 0; k--){       // light enters from the air side
+    const {n, t} = layers[k];
+    const delta = 2*Math.PI*n*t/lam, cs=Math.cos(delta), sn=Math.sin(delta);
+    [a, b, c, d] = [a*cs - b*n*sn, a*sn/n + b*cs, c*cs + d*n*sn, d*cs - c*sn/n];
+  }
+  // Y = C/B; with incident index n0 = 1:  T = 4·ns / |B + C|²
+  const re = a + d*ns, im = b*ns + c;
+  return 4*ns / (re*re + im*im);
+}
+// back: "uncoated" (bare back face), "coated" (same coating on both faces), "none" (front only)
+function totalT(lam, layers, ns, back){
+  const Tf = frontT(lam, layers, ns);
+  if (back === "none") return Tf;
+  const Rf = 1-Tf;
+  if (back === "coated") return Tf*Tf/(1 - Rf*Rf);
+  const Tb = 4*ns/((1+ns)**2), Rb = 1-Tb;
+  return Tf*Tb/(1 - Rf*Rb);   // incoherent sum of bounces inside the substrate
+}
+// Reflection of the coated face alone, as a reflectance scan reports it
+const frontR = (lam, layers, ns) => 1 - frontT(lam, layers, ns);
+const valueAt = (q, lam, layers, ns, back) => q === "R" ? frontR(lam, layers, ns) : totalT(lam, layers, ns, back);
+
+// Wavelength formatting: µm for IR plots, nm otherwise
+let useUm = false;
+const fmtW = (x, dp) => useUm ? (x/1000).toFixed(dp ?? 2) + " µm" : (dp ? x.toFixed(dp) : Math.round(x)) + " nm";
+
+// ---------- Classify the curve ----------
+// 1. Find the main blocking zone (T < 10%), bridging small gaps.
+// 2. Walk outward to the 50% points on each side: those are the edges.
+// 3. Any spike above 50% inside the blocking zone is a bandpass peak.
+function classify(xs, ys){
+  const N = ys.length, f = x => fmtW(x), pct = t => (t*100).toFixed(t<0.01?2:1)+"%";
+  const at50 = (k0,k1) => { const y0=ys[k0]-0.5, y1=ys[k1]-0.5; return xs[k0]+(xs[k1]-xs[k0])*y0/(y0-y1); };
+  const low = []; ys.forEach((t,k)=>{ if(t<0.1) low.push(k); });
+  const minT = Math.min(...ys), kMin = ys.indexOf(minT);
+  if (!low.length) return minT < 0.5
+    ? ["Partial reflector", `Deepest dip ${pct(minT)} at ${f(xs[kMin])}. Add repeats or more index contrast to block harder.`]
+    : ["High transmission across the range", `No blocking between ${f(xs[0])} and ${f(xs[N-1])}. Lowest point ${pct(minT)}.`];
+  const gap = Math.round(N*0.08), clusters = [[low[0],low[0]]];
+  for (const k of low.slice(1)){ const c = clusters.at(-1); if (k-c[1] <= gap) c[1]=k; else clusters.push([k,k]); }
+  const [s,e] = clusters.reduce((best,c)=> (xs[c[1]]-xs[c[0]] > xs[best[1]]-xs[best[0]] ? c : best));
+  let L=s; while (L>0 && ys[L-1]<0.5) L--;
+  let R=e; while (R<N-1 && ys[R+1]<0.5) R++;
+  const left = L>0 ? at50(L-1,L) : null, right = R<N-1 ? at50(R,R+1) : null;
+  const zMin = Math.min(...ys.slice(s,e+1));
+  // passbands inside the blocking zone
+  const peaks = []; let k=s;
+  while (k<=e){ if (ys[k]>=0.5){ const a=k; while(k<=e && ys[k]>=0.5) k++; peaks.push([a,k-1]); } else k++; }
+  if (peaks.length){
+    const [a,b] = peaks.reduce((p,q)=> Math.max(...ys.slice(q[0],q[1]+1)) > Math.max(...ys.slice(p[0],p[1]+1)) ? q : p);
+    const x1 = at50(a-1,a), x2 = at50(b,b+1), pk = Math.max(...ys.slice(a,b+1));
+    const g = x => fmtW(x, x2-x1<10 ? (useUm?3:1) : undefined);
+    return ["Bandpass filter", `Passes ${g(x1)} to ${g(x2)} (center ${g((x1+x2)/2)}, FWHM ${fmtW(x2-x1, useUm?3:1)}), peak ${pct(pk)}. Blocking zone ${f(left??xs[0])} to ${f(right??xs[N-1])}.` + (peaks.length>1?` ${peaks.length} peaks found.`:"")];
+  }
+  if (left===null && right===null) return ["Blocking across the whole range", `Down to ${pct(zMin)}. Widen the plot range to find the edges.`];
+  if (left===null) return ["Longpass filter", `50% edge at ${f(right)}. Blocks below it, down to ${pct(zMin)}.`];
+  if (right===null) return ["Shortpass filter", `50% edge at ${f(left)}. Blocks above it, down to ${pct(zMin)}.`];
+  return ["Reflector / notch", `Blocks ${f(left)} to ${f(right)} (width ${f(right-left)}), down to ${pct(zMin)}. Used as an edge filter: longpass edge at ${f(right)}, shortpass edge at ${f(left)}.`];
+}
+
+// ---------- Wavelength to a visible color for the strip under the plot ----------
+function wlRGB(w){
+  let r=0,g=0,b=0;
+  if (w<440){ r=(440-w)/60; b=1; } else if (w<490){ g=(w-440)/50; b=1; }
+  else if (w<510){ g=1; b=(510-w)/20; } else if (w<580){ r=(w-510)/70; g=1; }
+  else if (w<645){ r=1; g=(645-w)/65; } else r=1;
+  const fade = w<420 ? 0.3+0.7*(w-380)/40 : w>700 ? 0.3+0.7*(780-w)/80 : 1;
+  return `rgb(${[r,g,b].map(v=>Math.round(255*Math.max(0,v*fade))).join(",")})`;
+}
+
+// ---------- Drawing ----------
+const cv = $("plot"), ctx = cv.getContext("2d");
+let last = null, hoverX = null;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const M = {l:46, r:12, t:12, b:46};
+
+function draw(){
+  if (!last) return;
+  const dpr = window.devicePixelRatio||1, W = cv.clientWidth, Hh = cv.clientHeight;
+  cv.width = W*dpr; cv.height = Hh*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,Hh);
+  const {xs, ys} = last, x0=xs[0], x1=xs.at(-1);
+  const pw = W-M.l-M.r, ph = Hh-M.t-M.b;
+  // Zoom the y axis in when everything plotted is small (an AR scan, say)
+  const yMax = [0.02,0.05,0.1,0.2,0.5,1].find(m => m >= Math.max(...ys)*1.05) ?? 1;
+  const X = x => M.l + (x-x0)/(x1-x0)*pw, Y = t => M.t + (1-Math.min(t,yMax)/yMax)*ph;
+  ctx.font = "12px 'Instrument Sans', system-ui, sans-serif";
+
+  // grid + labels
+  ctx.strokeStyle = css("--grid"); ctx.fillStyle = css("--muted"); ctx.lineWidth = 1;
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for (let k=0;k<=5;k++){ const t = yMax*k/5; ctx.beginPath(); ctx.moveTo(M.l,Y(t)); ctx.lineTo(M.l+pw,Y(t)); ctx.stroke();
+    ctx.fillText(+(t*100).toFixed(yMax<0.1?1:0)+"%", M.l-6, Y(t)); }
+  ctx.save(); ctx.translate(12, M.t+ph/2); ctx.rotate(-Math.PI/2); ctx.textAlign="center";
+  ctx.fillText(last.q==="R" ? "Reflection, coated side" : "Transmission", 0, 0); ctx.restore(); ctx.textAlign="right";
+  const span = x1-x0, step = [10,20,25,50,100,200,250,500,1000,2000].find(s=>span/s<=8)||5000;
+  ctx.textAlign="center"; ctx.textBaseline="top";
+  for (let x=Math.ceil(x0/step)*step; x<=x1; x+=step){ ctx.beginPath(); ctx.moveTo(X(x),M.t); ctx.lineTo(X(x),M.t+ph); ctx.stroke(); ctx.fillText(useUm ? +(x/1000).toFixed(2) : x, X(x), M.t+ph+14); }
+
+  // visible spectrum strip under the axis
+  for (let x=Math.max(380,x0); x<Math.min(780,x1); x+=2){ ctx.fillStyle = wlRGB(x); ctx.fillRect(X(x), M.t+ph+2, Math.max(1,X(x+2)-X(x)+0.5), 8); }
+  ctx.fillStyle = css("--muted"); ctx.fillText(useUm ? "Wavelength (µm)" : "Wavelength (nm)", M.l+pw/2, Hh-14);
+
+  // target zones: tinted column + a line at the threshold
+  for (const tg of targets){
+    if (!(tg.to>tg.from)) continue;
+    const a = X(Math.max(tg.from,x0)), b = X(Math.min(tg.to,x1)); if (b<=a) continue;
+    const good = (tq(tg)==="T") === tge(tg);   // wants light through: green; wants it stopped: red
+    ctx.fillStyle = css(good?"--passZone":"--blockZone"); ctx.fillRect(a, M.t, b-a, ph);
+    if (tq(tg) !== last.q) continue;   // threshold line only when it's on this plot's scale
+    ctx.strokeStyle = css(good?"--ok":"--err"); ctx.lineWidth = 1.5; if (tavg(tg)) ctx.setLineDash([6,3]);
+    ctx.beginPath(); ctx.moveTo(a, Y(tg.thr/100)); ctx.lineTo(b, Y(tg.thr/100)); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // 50% reference line
+  if (yMax === 1) ctx.setLineDash([4,4]); ctx.strokeStyle = css("--line"); ctx.beginPath(); ctx.moveTo(M.l,Y(.5)); ctx.lineTo(M.l+pw,Y(.5)); if (yMax === 1) ctx.stroke(); ctx.setLineDash([]);
+
+  // the curve
+  ctx.save(); ctx.beginPath(); ctx.rect(M.l, M.t-1, pw, ph+2); ctx.clip();
+  ctx.strokeStyle = css("--curve"); ctx.lineWidth = 2; ctx.lineJoin="round"; ctx.beginPath();
+  xs.forEach((x,k)=> k ? ctx.lineTo(X(x),Y(ys[k])) : ctx.moveTo(X(x),Y(ys[k]))); ctx.stroke(); ctx.restore();
+
+  // hover readout
+  if (hoverX!==null && hoverX>=M.l && hoverX<=M.l+pw){
+    const lam = x0 + (hoverX-M.l)/pw*(x1-x0);
+    let k = Math.min(xs.length-1, Math.max(0, Math.round((lam-x0)/(x1-x0)*(xs.length-1))));
+    while (k>0 && xs[k]>lam) k--; while (k<xs.length-1 && xs[k+1]<=lam) k++;
+    const t = ys[k];
+    ctx.strokeStyle = css("--muted"); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(hoverX,M.t); ctx.lineTo(hoverX,M.t+ph); ctx.stroke();
+    ctx.fillStyle = css("--curve"); ctx.beginPath(); ctx.arc(hoverX,Y(t),4,0,7); ctx.fill();
+    const label = `${fmtW(xs[k], useUm?3:0)}   ${last.q} ${(t*100).toFixed(t<0.1?3:2)}%`;
+    ctx.font = "600 12px 'Instrument Sans', system-ui, sans-serif";
+    const tw = ctx.measureText(label).width + 14, bx = Math.min(Math.max(hoverX - tw/2, M.l), M.l+pw-tw);
+    ctx.fillStyle = css("--panel"); ctx.strokeStyle = css("--line"); ctx.fillRect(bx, M.t+4, tw, 22); ctx.strokeRect(bx, M.t+4, tw, 22);
+    ctx.fillStyle = css("--ink"); ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(label, bx+7, M.t+15);
+  }
+}
+const setHover = e => { const r = cv.getBoundingClientRect(); hoverX = (e.touches?e.touches[0].clientX:e.clientX) - r.left; draw(); };
+cv.addEventListener("mousemove", setHover); cv.addEventListener("touchmove", setHover, {passive:true});
+cv.addEventListener("touchstart", setHover, {passive:true});
+cv.addEventListener("mouseleave", ()=>{ hoverX=null; draw(); });
+window.addEventListener("resize", draw);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+
+// ---------- Main update ----------
+function update(){
+  const nS=+$("subN").value, nH=+$("hN").value, nL=+$("lN").value, lam0=+$("lam0").value;
+  let wMin=+$("wMin").value, wMax=+$("wMax").value;
+  $("err").textContent = "";
+  if (!(nS>0&&nH>0&&nL>0)) { $("err").textContent="Each index needs to be a positive number."; return; }
+  if (!(lam0>0)) { $("err").textContent="Set a design wavelength above 0 nm."; return; }
+  if (!(wMax>wMin && wMin>0)) { $("err").textContent="The plot range needs “From” smaller than “To”."; return; }
+  const layers = currentLayers();
+  if (!layers) return;
+  // Sample finely, and always include λ₀ itself so a narrow bandpass peak is never skipped
+  const N = 3000, xs=[], back = $("back").value, q = $("plotQ").value;
+  useUm = wMax >= 2000;
+  for (let k=0;k<N;k++) xs.push(wMin + (wMax-wMin)*k/(N-1));
+  if (lam0>wMin && lam0<wMax){ xs.push(lam0); xs.sort((a,b)=>a-b); }
+  const yT = xs.map(w => totalT(w, layers, nS, back));
+  const ys = q === "R" ? xs.map(w => frontR(w, layers, nS)) : yT;
+  last = {xs, ys, q}; draw();
+
+  const [title, detail] = classify(xs, yT);   // filter type always judged from transmission
+  $("result").textContent = title; $("detail").textContent = detail;
+  $("spec").innerHTML = targets.filter(t=>t.to>t.from).map(t => {
+    const worst = evalZone(t, layers, nS, back), ok = zoneOK(t, worst);
+    const w = worst*100, wtxt = w<1 ? w.toFixed(3) : w<10 ? w.toFixed(2) : w.toFixed(1);
+    const word = tavg(t) ? "average" : tge(t) ? "lowest" : "highest";
+    return `<li><span class="${ok?"y":"n"}">${ok?"✓":"✗"}</span> ${t.type} ${t.thr}%, ${fmtW(t.from)} to ${fmtW(t.to)}: ${word} ${wtxt}%</li>`;
+  }).join("");
+
+  // stack bar (substrate on the left, air on the right)
+  const bar = $("bar"); bar.innerHTML = '<div class="s">Sub</div>';
+  for (const [i,l] of layers.entries()){
+    const d = document.createElement("div"); d.className = l.m; d.style.flex = `${l.t} 1 0`;
+    d.title = `Layer ${i+1}: ${l.m==="H"?$("hSel").value:$("lSel").value}, ${l.t.toFixed(1)} nm`; bar.append(d);
+  }
+  bar.insertAdjacentHTML("beforeend",'<div class="a">Air</div>');
+  const total = layers.reduce((s,l)=>s+l.t,0);
+  $("legend").textContent = `${layers.length} layers, ${(total/1000).toFixed(2)} µm total. Dark = ${$("hSel").value} (H), light = ${$("lSel").value} (L).`;
+
+  let run = 0;
+  $("tbody").innerHTML = layers.map((l,i)=>{ run += l.t;
+    return `<tr><td>${i+1}</td><td>${l.m==="H"?$("hSel").value:$("lSel").value}</td><td><input class="tin" data-i="${i}" type="number" step="0.1" min="0" value="${l.t.toFixed(1)}" aria-label="Layer ${i+1} thickness"></td><td>${run.toFixed(1)}</td></tr>`; }).join("");
+}
+
+// ---------- Spec check: worst T inside a target zone ----------
+// A target's type reads like a spec sheet: "T≥", "Tavg≥", "R≤", "Ravg≤" ...
+const tq = t => t.type[0];                    // "T" or "R"
+const tge = t => t.type.includes("≥");        // wants the value at or above
+const tavg = t => t.type.includes("avg");     // average over the range vs every point
+// The number a spec sheet would quote for this zone: average, or the worst point
+function evalZone(t, layers, ns, back){
+  let sum = 0, w = tge(t) ? 1 : 0;
+  for (let k=0;k<=100;k++){
+    const v = valueAt(tq(t), t.from+(t.to-t.from)*k/100, layers, ns, back);
+    sum += v; w = tge(t) ? Math.min(w,v) : Math.max(w,v);
+  }
+  return tavg(t) ? sum/101 : w;
+}
+const zoneOK = (t, v) => tge(t) ? v*100 >= t.thr : v*100 <= t.thr;
+function specMet(layers, ns, back){ return targets.filter(t=>t.to>t.from).every(t => zoneOK(t, evalZone(t, layers, ns, back))); }
+
+// ---------- Design state ----------
+// custom = null means "use the formula". After optimizing, custom holds
+// physical thicknesses: [{m:"H", t:123.4}, ...] listed substrate to air.
+let custom = null;
+function currentLayers(){
+  const nH=+$("hN").value, nL=+$("lN").value, lam0=+$("lam0").value;
+  if (custom) return custom.map(l => { const n = l.m==="H"?nH:nL; return {m:l.m, n, t:l.t, q:l.t*4*n/lam0}; });
+  try { return parseFormula($("formula").value).map(l => { const n = l.m==="H"?nH:nL; return {...l, n, t: l.q*lam0/(4*n)}; }); }
+  catch(e){ $("err").textContent = e.message; return null; }
+}
+function useCustom(layers){
+  custom = layers.map(l => ({m:l.m, t:l.t}));
+  activePreset = null;
+  document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed","false"));
+  $("formula").value = ""; $("formula").placeholder = "Optimized design. Type a formula to start over.";
+}
+
+// ---------- Targets ----------
+const SPEC_TYPES = ["T≥","Tavg≥","T≤","Tavg≤","R≤","Ravg≤","R≥","Ravg≥"];
+let targets = [{type:"T≤", from:420, to:500, thr:1}, {type:"T≥", from:580, to:1000, thr:90}];
+function renderTargets(){
+  const box = $("targets"); box.innerHTML = "";
+  targets.forEach((t,i) => {
+    const row = document.createElement("div"); row.className = "trow";
+    row.innerHTML = `<select aria-label="Spec">${SPEC_TYPES.map(o=>`<option>${o}</option>`).join("")}</select>
+      <input type="number" aria-label="From nm" value="${t.from}"><input type="number" aria-label="To nm" value="${t.to}">
+      <input type="number" aria-label="T percent" step="any" value="${t.thr}"><button class="x" aria-label="Remove target">✕</button>`;
+    const [sel, a, b, th, x] = row.children;
+    sel.value = t.type;
+    sel.onchange = () => { const wasGe = tge(t), wasQ = tq(t); t.type = sel.value;
+      if (wasGe !== tge(t) || wasQ !== tq(t)) { t.thr = (tq(t)==="T") === tge(t) ? 90 : 1; th.value = t.thr; } update(); };
+    a.oninput = () => { t.from = +a.value; update(); };
+    b.oninput = () => { t.to = +b.value; update(); };
+    th.oninput = () => { t.thr = +th.value; update(); };
+    x.onclick = () => { targets.splice(i,1); renderTargets(); update(); };
+    box.append(row);
+  });
+}
+$("addT").onclick = () => {
+  const lastT = targets.at(-1), from = lastT ? lastT.to + 50 : 400;
+  const pass = !(lastT && lastT.type==="T≥");
+  targets.push({type: pass ? "T≥" : "T≤", from, to: from+100, thr: pass ? 90 : 1});
+  renderTargets(); update();
+};
+// Insert a copy of an existing H/L pair. Every position is tried and the one
+// with the lowest merit wins, so it works for edge filters and bandpasses alike.
+function insertBestPair(L, pts, ns, back){
+  if (L.length < 2) return null;
+  let best = null;
+  for (let pos=0; pos+1<L.length; pos++){
+    const trial = L.slice(0,pos).concat([{...L[pos]},{...L[pos+1]}], L.slice(pos));
+    const f = merit(trial, pts, ns, back);
+    if (!best || f < best.f) best = {pos, f};
+  }
+  L.splice(best.pos, 0, {...L[best.pos]}, {...L[best.pos+1]});
+  return best;
+}
+$("addPair").onclick = () => {
+  if (opt) return;
+  const layers = currentLayers(); if (!layers) return;
+  const pts = targetPoints();
+  if (pts.length) insertBestPair(layers, pts, +$("subN").value, $("back").value);
+  else { const mid = Math.max(0, Math.floor(layers.length/2)-1); layers.splice(mid, 0, {...layers[mid]}, {...layers[mid+1]}); }
+  useCustom(layers); update();
+};
+
+
+// ---------- Merit function: one number, lower is better ----------
+// Each target becomes a group of sample wavelengths.
+// "≥" shortfall counts 10x per unit (10% short = 1.0).
+// "≤" excess is measured in decades, like optical density (10x too much = 1.0).
+// "avg" targets are judged on their average; others point by point.
+// Each aims slightly past the spec so the design clears it with a margin,
+// and a tiny extra term keeps nudging toward 100% / 0% once it's met.
+function targetPoints(){
+  const groups = [];
+  for (const t of targets){
+    if (!(t.to>t.from) || !(t.thr>0)) continue;
+    const n = Math.min(60, Math.max(12, Math.round((t.to-t.from)/4)));
+    const ws = Array.from({length:n}, (_,k) => t.from + (t.to-t.from)*k/(n-1));
+    const ge = tge(t), thr = ge ? Math.min(0.999, t.thr/100 + 0.005) : t.thr/100*0.8;   // safety margin
+    groups.push({ws, q: tq(t), ge, avg: tavg(t), thr});
+  }
+  return groups;
+}
+function miss(v, g){
+  return g.ge ? Math.max(0, g.thr - v)*10 : Math.max(0, Math.log10(Math.max(v,1e-12)) - Math.log10(g.thr));
+}
+function merit(layers, groups, ns, back){
+  let s = 0, n = 0;
+  for (const g of groups){
+    let sum = 0;
+    for (const w of g.ws){
+      const v = valueAt(g.q, w, layers, ns, back);
+      sum += v; s += 0.001*(g.ge ? (1-v)**2 : v*v);
+      if (!g.avg){ const d = miss(v, g); s += d*d; }
+    }
+    if (g.avg){ const d = miss(sum/g.ws.length, g); s += d*d*g.ws.length; }
+    n += g.ws.length;
+  }
+  return s / n;
+}
+// ---------- Optimizer ----------
+// Step 1: scan a scale factor for the whole stack (0.5x to 1.6x) to slide the
+//         stop band to roughly the right place.
+// Step 2: pattern search. Nudge one layer thicker; if the merit improves keep it
+//         and grow its step, else try thinner, else halve the step. Once per
+//         sweep also try scaling the whole stack. Done when every step is tiny.
+// It runs in ~25 ms slices so the page stays live and you can watch it.
+let opt = null;
+function startOpt(){
+  const layers = currentLayers(); if (!layers) return;
+  const pts = targetPoints();
+  if (!pts.length){ $("ostatus").textContent = "Add at least one target with From smaller than To."; return; }
+  useCustom(layers);
+  const L = currentLayers(), ns = +$("subN").value, back = $("back").value;
+  const lo = Math.max(0, +$("minT").value||0), hi = Math.max(lo+1, +$("maxT").value||1000);
+  const clamp = t => Math.min(hi, Math.max(lo, t));
+  L.forEach(l => l.t = clamp(l.t));
+  const f0 = merit(L,pts,ns,back), base = L.map(l => l.t);
+  let bestK = 1, bestF = f0;
+  for (let k=0.5; k<=1.6; k+=0.01){
+    L.forEach((l,j) => l.t = clamp(base[j]*k));
+    const f = merit(L,pts,ns,back); if (f < bestF){ bestF = f; bestK = k; }
+  }
+  L.forEach((l,j) => l.t = clamp(base[j]*bestK));
+  const maxL = Math.max(2, Math.round(+$("maxL").value || 80)), auto = $("autoL").checked;
+  opt = {L, pts, ns, back, lo, hi, maxL, auto, steps: L.map(l => Math.max(2, l.t*0.15)), scale:0.05, i:0, sweeps:0,
+         f: bestF, f0, startLayers: L.length, added:0, removed:0, changes:0};
+  $("optBtn").disabled = true; $("stopBtn").disabled = false;
+  requestAnimationFrame(tick);
+}
+function tryMove(i, dt){
+  const l = opt.L[i], old = l.t, nt = Math.min(opt.hi, Math.max(opt.lo, old+dt));
+  if (nt === old) return false;
+  l.t = nt; const f = merit(opt.L, opt.pts, opt.ns, opt.back);
+  if (f < opt.f){ opt.f = f; return true; }
+  l.t = old; return false;
+}
+function tryScale(k){
+  const old = opt.L.map(l => l.t);
+  opt.L.forEach(l => l.t = Math.min(opt.hi, Math.max(opt.lo, l.t*k)));
+  const f = merit(opt.L, opt.pts, opt.ns, opt.back);
+  if (f < opt.f){ opt.f = f; return true; }
+  opt.L.forEach((l,j) => l.t = old[j]); return false;
+}
+// When the thicknesses have settled: first drop any layer squeezed to the
+// minimum (merging its neighbors, which are the same material), then, if the
+// targets still fail, add the most helpful pair. Returns true to keep going.
+function restructure(){
+  if (!opt.auto || opt.changes > 150) return false;
+  const L = opt.L;
+  if (L.length > 2){
+    let k = -1;
+    L.forEach((l,j) => { if (l.t <= opt.lo + 0.1 && (k<0 || l.t < L[k].t)) k = j; });
+    if (k >= 0){
+      const trial = L.map(l => ({...l}));
+      if (k>0 && k<trial.length-1){ trial[k-1].t += trial[k+1].t; trial.splice(k,2); } else trial.splice(k,1);
+      const f = merit(trial, opt.pts, opt.ns, opt.back);
+      if (f <= opt.f*1.2 + 1e-9){ opt.L = trial; opt.f = f; opt.removed += (k>0 && k<L.length-1) ? 2 : 1; return resetSteps(); }
+    }
+  }
+  // Stop adding if the last five added pairs together improved the merit by under 5%
+  opt.hist = opt.hist || []; opt.hist.push(opt.f);
+  const h = opt.hist; if (h.length >= 6 && h.at(-1) > 0.95*h.at(-6)) { opt.stalled = true; return false; }
+  if (!specMet(L, opt.ns, opt.back) && L.length + 2 <= opt.maxL){
+    const r = insertBestPair(L, opt.pts, opt.ns, opt.back);
+    if (r){ opt.f = r.f; opt.added += 2; return resetSteps(); }
+  }
+  return false;
+}
+function resetSteps(){
+  opt.steps = opt.L.map(l => Math.max(2, l.t*0.15)); opt.scale = 0.05; opt.i = 0; opt.changes++;
+  return true;
+}
+function tick(){
+  if (!opt) return;
+  const t0 = performance.now();
+  while (performance.now() - t0 < 25){
+    if (opt.i===0){ const sc = opt.scale; opt.scale = (tryScale(1+sc) || tryScale(1-sc)) ? Math.min(sc*1.5, 0.3) : Math.max(sc*0.5, 0.002); }
+    const i = opt.i, st = opt.steps[i];
+    if (tryMove(i, st) || tryMove(i, -st)) opt.steps[i] = Math.min(st*1.5, 60);
+    else opt.steps[i] = st*0.5;
+    opt.i = (i+1) % opt.L.length; if (opt.i===0) opt.sweeps++;
+    if (Math.max(...opt.steps) < 0.02 || opt.f < 1e-9){ if (restructure()) continue; return finishOpt("Converged"); }
+    if (opt.sweeps >= 20000) return finishOpt("Hit the sweep limit");
+  }
+  // Redraw a few times a second; the rest of the time goes to optimizing
+  if (performance.now() - (opt.drawn||0) > 250){ opt.drawn = performance.now(); custom = opt.L.map(l => ({m:l.m, t:l.t})); update(); }
+  $("ostatus").textContent = `Running: ${opt.L.length} layers, sweep ${opt.sweeps}, merit ${opt.f.toExponential(2)}`;
+  requestAnimationFrame(tick);
+}
+function finishOpt(why){
+  if (!opt) return;
+  custom = opt.L.map(l => ({m:l.m, t:l.t}));
+  const met = specMet(opt.L, opt.ns, opt.back), n = opt.L.length;
+  const changes = [opt.added && `added ${opt.added}`, opt.removed && `removed ${opt.removed}`].filter(Boolean).join(", ");
+  let msg = `${why} after ${opt.sweeps} sweeps with ${n} layers` + (changes ? ` (${changes}, started with ${opt.startLayers})` : "") + ". ";
+  if (met) msg += "All targets met.";
+  else if (opt.stalled) msg += "More layers stopped helping, so these materials probably can’t reach this spec. Try a lower-index L material, relax a %, or narrow a range.";
+  else if (opt.auto && n + 2 > opt.maxL) msg += `Targets not met at the ${opt.maxL}-layer limit. Raise it, widen the gap between zones, or relax a %.`;
+  else if (!opt.auto) msg += "Targets not met. Turn on “Add and remove layers” or add a pair, then optimize again.";
+  else msg += "Targets not met. Widen the gap between zones or relax a %.";
+  $("ostatus").textContent = msg;
+  opt = null; $("optBtn").disabled = false; $("stopBtn").disabled = true; update();
+}
+function cancelOpt(){ if (opt){ opt = null; $("optBtn").disabled = false; $("stopBtn").disabled = true; $("ostatus").textContent = ""; } }
+$("optBtn").onclick = startOpt;
+$("stopBtn").onclick = () => finishOpt("Stopped");
+
+// Typing a thickness in the recipe table edits that layer directly (in nm)
+$("tbody").addEventListener("change", e => {
+  if (!e.target.classList.contains("tin")) return;
+  const layers = currentLayers(); if (!layers) return;
+  const v = parseFloat(e.target.value);
+  if (!(v >= 0)) { update(); return; }
+  layers[+e.target.dataset.i].t = v;
+  cancelOpt(); useCustom(layers); update();
+});
+
+// ---------- Reading a written description ----------
+// No AI here: plain pattern matching, in three passes.
+//   1. Find wavelength ranges ("3 to 5 microns", "400-620 nm") and single
+//      wavelengths with a keyword in front ("cut-on 650 nm", "FWHM 10 nm").
+//   2. Find every "%" or "OD" and read the words just before it for what's
+//      measured (reflection / transmission), whether it's an average, and
+//      which way it goes ("less than", ">", "at least"...). Then attach the
+//      nearest wavelength range.
+//   3. Fill in sensible defaults for whatever the description left out.
+const UNIT = "(nm|nanometers?|nanometres?|µm|um|microns?|micrometers?|micrometres?)";
+const toNm = (v, u) => !u ? (v < 30 ? v*1000 : v) : /^n/.test(u) ? v : v*1000;
+
+function parseDescription(raw){
+  const t = " " + raw.toLowerCase().replace(/μ/g,"µ").replace(/[–—]/g,"-").replace(/≤/g,"<=").replace(/≥/g,">=") + " ";
+  const out = {sub:null, kind:null, ranges:[], specs:[], center:null, fwhm:null, edge:null, back:null};
+
+  // substrate
+  const SUBS = [[/germanium|\bge\b/, "Germanium"], [/silicon\b|\bsi\b/, "Silicon"], [/\bbk-?7\b|n-bk7/, "BK7"],
+    [/green glass|soda[- ]?lime|float glass/, "Green glass (soda-lime)"], [/fused silica|quartz|\buvfs\b/, "Fused silica / quartz"],
+    [/sapphire/, "Sapphire"], [/caf2|calcium fluoride/, "CaF2"], [/znse|zinc selenide/, "ZnSe"]];
+  for (const [re, name] of SUBS) if (re.test(t)) { out.sub = name; break; }
+
+  // filter kind
+  const KINDS = [[/anti-?reflect|antireflect|\bar\b|\ba\/r\b|\bbbar\b/, "ar"], [/band-?pass|\bbp\b|\bbpf\b/, "bp"],
+    [/long-?\s?(wave)?\s?pass|\blwp\b|\blp\b|cut-?on/, "lp"], [/short-?\s?(wave)?\s?pass|\bswp\b|\bsp\b|cut-?off/, "sp"],
+    [/notch/, "notch"], [/mirror|high[- ]reflect|\bhr\b/, "mirror"]];
+  for (const [re, k] of KINDS) if (re.test(t)) { out.kind = k; break; }
+  if (/both sides|two sides|double[- ]sided|\bs1\s*(and|&|\+)\s*s2\b/.test(t)) out.back = "coated";
+  else if (/one side|single[- ]sided|uncoated back/.test(t)) out.back = "uncoated";
+
+  // 1. ranges
+  const rangeRe = new RegExp(String.raw`(\d+(?:\.\d+)?)\s*${UNIT}?\s*(?:-|to|and|\.\.)\s*(\d+(?:\.\d+)?)\s*${UNIT}?(?!\s*%)`, "g");
+  for (const m of t.matchAll(rangeRe)){
+    if (/%/.test(t.slice(m.index + m[1].length, m.index + m[1].length + 2))) continue;
+    const u = m[4] || m[2];
+    let a = toNm(+m[1], m[2] || u), b = toNm(+m[3], u);
+    if (a > b) [a, b] = [b, a];
+    if (b > a) out.ranges.push({a, b, start: m.index, end: m.index + m[0].length});
+  }
+  const inRange = i => out.ranges.some(r => i >= r.start && i < r.end);
+  // single wavelengths with a unit
+  for (const m of t.matchAll(new RegExp(String.raw`(\d+(?:\.\d+)?)\s*${UNIT}`, "g"))){
+    if (inRange(m.index)) continue;
+    const before = t.slice(Math.max(0, m.index-30), m.index), v = toNm(+m[1], m[2]);
+    if (/fwhm|bandwidth|band width|\bbw\b|width/.test(before)) out.fwhm = v;
+    else if (/cent(er|re)|\bcwl\b/.test(before)) out.center = v;
+    else if (/cut-?on|cut-?off|edge|\b50\s*%/.test(before)) out.edge = v;
+    else if (out.kind==="bp" && out.center===null) out.center = v;
+    else if ((out.kind==="lp" || out.kind==="sp") && out.edge===null) out.edge = v;
+  }
+
+  // 2. specs
+  const marks = [...t.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map(m => ({i:m.index, end:m.index+m[0].length, pct:+m[1]}))
+    .concat([...t.matchAll(/\bod\s*(\d+(?:\.\d+)?)/g)].map(m => ({i:m.index, end:m.index+m[0].length, od:+m[1]})))
+    .sort((a,b) => a.i-b.i);
+  let prev = 0;
+  for (const mk of marks){
+    const win = t.slice(Math.max(prev, mk.i-70), mk.i);
+    const lastAt = re => { let k=-1; for (const m of win.matchAll(re)) k = m.index; return k; };
+    const rAt = lastAt(/reflect|\br(avg|abs)?\b|ravg|rabs/g), tAt = lastAt(/transmi|\bt(avg|abs)?\b|tavg|tabs|\bpass\b|peak/g);
+    const bAt = lastAt(/block|reject|\bod\b/g);
+    let q = rAt > tAt ? "R" : tAt >= 0 ? "T" : (out.kind==="ar" || out.kind==="mirror") ? "R" : "T";
+    let ge;
+    if (/less than|lower than|below|under|<|\bmax(imum)?\b|at most|not exceed|no more than|up to/.test(win)) ge = false;
+    else if (/greater|more than|higher than|above|over|>|\bmin(imum)?\b|at least|exceed/.test(win)) ge = true;
+    else ge = q==="R" ? out.kind==="mirror" : !(bAt > tAt);
+    if (bAt > Math.max(tAt, rAt)){ q = "T"; ge = false; }
+    let pct = mk.pct;
+    if (mk.od !== undefined){ q = "T"; ge = false; pct = 100 * 10**(-mk.od); }
+    const avg = /average|\bavg\b|ravg|tavg|mean/.test(win) && !/peak/.test(win.slice(Math.max(0,win.length-25)));
+    // nearest range: one starting right after (same clause), else one ending just before
+    const clauseEnd = (t.slice(mk.end).search(/[.;]|,\s*(?=[a-z])(?!\s*(between|from|over|across|in)\b)/) + 1 || 999) + mk.end;
+    let r = out.ranges.find(r => r.start >= mk.end && r.start < Math.min(mk.end+45, clauseEnd));
+    if (!r) r = [...out.ranges].reverse().find(r => r.end <= mk.i && r.end > mk.i-80);
+    out.specs.push({q, ge, avg, pct: +pct.toPrecision(3), range: r || null, od: mk.od});
+    prev = mk.end;
+  }
+  return out;
+}
+
+function buildFromDescription(){
+  const text = $("desc").value.trim(), read = $("read"), say = [], warn = [];
+  if (!text){ read.innerHTML = '<li class="warn">Type a description first, or tap an example.</li>'; return; }
+  const d = parseDescription(text);
+  let kind = d.kind;
+  const ranges = d.ranges;
+
+  // infer the kind from the specs if no keyword said it
+  if (!kind){
+    if (d.specs.some(s => s.q==="R" && !s.ge) && !d.specs.some(s => s.q==="T")) kind = "ar";
+    else if (d.center) kind = "bp";
+    else {
+      const pass = d.specs.find(s => s.q==="T" && s.ge && s.range), block = d.specs.find(s => s.q==="T" && !s.ge && s.range);
+      if (pass && block) kind = pass.range.a > block.range.a ? "lp" : "sp";
+      else if (d.specs.some(s => s.q==="R" && s.ge)) kind = "mirror";
+    }
+  }
+  if (!kind){ read.innerHTML = '<li class="warn">I couldn’t tell what kind of filter this is. Include a word like AR, longpass, shortpass, bandpass, mirror or notch.</li>'; return; }
+
+  // substrate and materials
+  if (d.sub){ $("subSel").value = d.sub; $("subN").value = SUBSTRATES[d.sub]; }
+  const subName = $("subSel").value, ns = +$("subN").value;
+  const allW = ranges.flatMap(r => [r.a, r.b]).concat([d.center, d.edge].filter(Boolean));
+  if (!allW.length){ read.innerHTML = '<li class="warn">I couldn’t find a wavelength. Add a range like “3 to 5 microns” or “400-700 nm”.</li>'; return; }
+  const IR = Math.max(...allW) > 1800;
+  useUm = Math.max(...allW) >= 2000;
+  // IR edge filters: Ge/ZnS. IR AR needs a low-index outer layer, so ZnS/YbF3.
+  const wasIR = ["Ge","ZnS"].includes($("hSel").value);
+  const [hName, lName] = IR ? (kind==="ar" ? ["ZnS","YbF3"] : ["Ge","ZnS"]) : (wasIR ? ["Ta2O5","SiO2"] : [$("hSel").value, $("lSel").value]);
+  const changed = hName !== $("hSel").value || lName !== $("lSel").value;
+  $("hSel").value = hName; $("lSel").value = lName;
+  if (changed){ $("hN").value = MATERIALS[hName]; $("lN").value = MATERIALS[lName]; }   // otherwise keep your own indices
+  const nH = +$("hN").value, nL = +$("lN").value;
+  say.push(`Substrate: ${subName} (n ${ns})` + (d.sub ? "" : ", kept from before"));
+  say.push(`Materials: ${hName} (H) and ${lName} (L)` + (changed && IR ? (kind==="ar" ? ", switched for an IR AR (a low-index outer layer is what gets reflection down; Ge and ZnS alone can’t get much below 4% here)" : ", switched for the infrared") : ""));
+
+  // turn specs into targets
+  const R = (a,b) => ({a: Math.round(a), b: Math.round(b)});
+  const main = ranges[0] ? R(ranges[0].a, ranges[0].b) : null;
+  const newT = [], label = {ar:"Anti-reflection", lp:"Longpass", sp:"Shortpass", bp:"Bandpass", mirror:"High reflector", notch:"Notch"}[kind];
+  const typeOf = s => s.q + (s.avg ? "avg" : "") + (s.ge ? "≥" : "≤");
+  const addT = (type, a, b, thr, dflt) => { newT.push({type, from: Math.round(a), to: Math.round(b), thr}); if (dflt) say.push(`Assumed: ${type} ${thr}% from ${fmtW(a)} to ${fmtW(b)}`); };
+
+  let c = d.center, w = d.fwhm, e = d.edge;
+  if (kind==="bp"){
+    if (!c && main) c = (main.a+main.b)/2;
+    if (!w) w = main ? main.b-main.a : c*0.02;
+    if (!c){ read.innerHTML = '<li class="warn">For a bandpass, give a center wavelength, like “center 532 nm, FWHM 10 nm”.</li>'; return; }
+  }
+  if ((kind==="lp" || kind==="sp") && !e){
+    const pass = d.specs.find(s => s.q==="T" && s.ge && s.range), block = d.specs.find(s => s.q==="T" && !s.ge && s.range);
+    if (pass && block) e = kind==="lp" ? (block.range.b + pass.range.a)/2 : (pass.range.b + block.range.a)/2;
+    else if (main) e = kind==="lp" ? main.a : main.b;
+  }
+  for (const s of d.specs){
+    let r = s.range ? R(s.range.a, s.range.b) : null;
+    if (!r){
+      if (kind==="bp" && s.q==="T" && s.ge) r = R(c - w*0.1, c + w*0.1);
+      else if (main && !(kind==="lp"||kind==="sp")) r = main;
+      else if (kind==="lp" && e) r = s.ge ? R(e*1.04, e*1.5) : R(e*0.78, e*0.95);
+      else if (kind==="sp" && e) r = s.ge ? R(e*0.7, e*0.96) : R(e*1.05, e*1.3);
+    }
+    if (!r){ warn.push(`Skipped ${typeOf(s)} ${s.pct}%: no wavelength range for it.`); continue; }
+    addT(typeOf(s), r.a, r.b, s.pct);
+    say.push(`Spec: ${typeOf(s)} ${s.pct}%` + (s.od!==undefined ? ` (OD ${s.od})` : "") + ` from ${fmtW(r.a)} to ${fmtW(r.b)}`);
+  }
+  const has = (q, ge) => newT.some(x => x.type[0]===q && x.type.includes(ge?"≥":"≤"));
+  if (kind==="ar"){
+    if (!main && !newT.length){ read.innerHTML = '<li class="warn">For an AR coating, give the range, like “AR 3 to 5 microns”.</li>'; return; }
+    if (!has("R", false)) addT("Ravg≤", main.a, main.b, 1, true);
+  } else if (kind==="lp" || kind==="sp"){
+    if (!e){ read.innerHTML = '<li class="warn">Give the edge, like “cut-on 650 nm”, or a block range and a pass range.</li>'; return; }
+    const lp = kind==="lp";
+    if (!has("T", false)) lp ? addT("T≤", e*0.78, e*0.95, 1, true) : addT("T≤", e*1.05, e*1.3, 1, true);
+    if (!has("T", true))  lp ? addT("T≥", e*1.04, e*1.5, 90, true) : addT("T≥", e*0.7, e*0.96, 90, true);
+  } else if (kind==="bp"){
+    if (!has("T", true)) addT("T≥", c - w*0.1, c + w*0.1, 80, true);
+    if (!has("T", false)){ addT("T≤", c - w*6, c - w*2, 1, true); addT("T≤", c + w*2, c + w*6, 1, true); }
+  } else if (kind==="mirror"){
+    if (!main && !newT.length){ read.innerHTML = '<li class="warn">Give the range to reflect, like “mirror 400-700 nm”.</li>'; return; }
+    if (!has("R", true)) addT("Ravg≥", main.a, main.b, 99, true);
+  } else if (kind==="notch"){
+    if (!main){ read.innerHTML = '<li class="warn">Give the range to block, like “notch 520-545 nm”.</li>'; return; }
+    if (!has("T", false)) addT("T≤", main.a, main.b, 1, true);
+    if (!has("T", true)){ const wd = main.b-main.a; addT("T≥", main.a - wd*1.5, main.a - wd*0.4, 90, true); addT("T≥", main.b + wd*0.4, main.b + wd*1.5, 90, true); }
+  }
+  newT.forEach(x => { x.from = Math.max(100, x.from); });
+
+  // starting stack
+  const D = (2/Math.PI) * Math.asin((nH-nL)/(nH+nL)), reps = IR ? 5 : 8;
+  let lam0, formula;
+  const lo = Math.min(...newT.map(x=>x.from)), hi = Math.max(...newT.map(x=>x.to));
+  if (kind==="ar"){ lam0 = (lo+hi)/2; formula = "H L"; }
+  else if (kind==="lp"){ lam0 = e/(1+D); formula = `(0.5H L 0.5H)^${reps}`; }
+  else if (kind==="sp"){ lam0 = e/(1-D); formula = `(0.5L H 0.5L)^${reps}`; }
+  else if (kind==="bp"){ lam0 = c; formula = `(HL)^4 2H (LH)^4`; }
+  else { const z = main || {a:lo, b:hi}; lam0 = (z.a+z.b)/2; formula = `(HL)^${reps} H`; }
+  lam0 = Math.round(lam0);
+
+  // plot window, layer limits, plot quantity, back surface
+  const pad = Math.max(20, (hi-lo)*0.15);
+  $("wMin").value = Math.max(100, Math.round(lo - pad)); $("wMax").value = Math.round(hi + pad);
+  $("maxT").value = Math.max(+$("maxT").value || 0, 500, Math.ceil(hi/(2*Math.min(nH,nL))/10)*10);
+  $("plotQ").value = newT.some(x => x.type[0]==="R") ? "R" : "T";
+  if (d.back) $("back").value = d.back;
+  else if (kind==="ar"){ $("back").value = "coated"; say.push("Back surface: same coating, as AR windows are usually coated on both sides"); }
+
+  targets = newT; renderTargets();
+  cancelOpt(); custom = null; activePreset = null;
+  document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed","false"));
+  $("lam0").value = lam0; $("formula").value = formula; $("formula").placeholder = "";
+  say.splice(2, 0, `Filter: ${label}` + (kind==="bp" ? `, center ${fmtW(c)}, FWHM ${fmtW(w, useUm?3:1)}` : (kind==="lp"||kind==="sp") ? `, edge ${fmtW(e)}` : ""));
+  say.push(`Starting stack: ${formula} at λ₀ ${fmtW(lam0)}, then optimizing`);
+  read.innerHTML = say.map(x => `<li>${x}</li>`).join("") + warn.map(x => `<li class="warn">${x}</li>`).join("");
+  update(); startOpt();
+}
+$("buildBtn").onclick = buildFromDescription;
+document.querySelectorAll(".chips button").forEach(b => b.onclick = () => { $("desc").value = b.dataset.ex; buildFromDescription(); });
+
+// ---------- Wiring ----------
+function setPreset(p){
+  cancelOpt(); activePreset = p; custom = null; $("formula").placeholder = "";
+  document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p===p));
+  $("formula").value = PRESETS[p](Math.max(1, Math.round(+$("pairs").value||1)));
+  update();
+}
+document.querySelectorAll("#presets button").forEach(b=>b.addEventListener("click",()=>setPreset(b.dataset.p)));
+$("pairs").addEventListener("input", ()=>{ if(activePreset && !opt) setPreset(activePreset); });
+$("formula").addEventListener("input", ()=>{ cancelOpt(); activePreset=null; custom=null; $("formula").placeholder=""; document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed","false")); update(); });
+["subN","hN","lN","lam0","wMin","wMax","back","plotQ"].forEach(id=>$(id).addEventListener("input", update));
+
+renderTargets();
+setPreset("longpass");
+</script>
+</body>
+</html>
